@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DJAVY — Cevichería Anticuchería | Pide por WhatsApp</title>
+    <title>D´JAVIS — Cevichería Anticuchería | Pide por WhatsApp</title>
 
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- Tipografía Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <!-- Iconos FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Leaflet Maps CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -50,7 +54,7 @@
     </style>
 
     <script>
-        window.djavyApp = function() {
+        window.djavisApp = function() {
             return {
                 // ---------- Navegación / catálogo ----------
                 selectedCategory: 'todas',
@@ -92,16 +96,13 @@
                 deliveryCost: 0,
                 isOutOfRange: false,
 
-                // ---------- Sedes ----------
-                // ⚠️ Verificar antes de publicar: el teléfono de "Puente Rojo" es un marcador (placeholder) y
-                // las coordenadas de "Country" son aproximadas (zona Miraflores). Corregir con la ubicación exacta.
                 selectedSedeId: 'puente-rojo',
                 sedes: [
                     {
                         id: 'puente-rojo',
                         name: 'Puente Rojo',
                         address: 'Calle Lima Norte 174, frente al Puente Eguiguren (Puente Rojo)',
-                        phone: '51900000000', // ⚠️ PENDIENTE: confirmar número de WhatsApp de esta sede
+                        phone: '51900000000',
                         lat: -5.190920,
                         lng: -80.624979
                     },
@@ -116,7 +117,7 @@
                     {
                         id: 'country',
                         name: 'Country',
-                        address: 'C.C. Country, Urb. Miraflores', // ⚠️ Verificar dirección y coordenadas exactas
+                        address: 'C.C. Country, Urb. Miraflores',
                         phone: '51903133226',
                         lat: -5.171333,
                         lng: -80.610078
@@ -131,20 +132,19 @@
                     }
                 ],
 
-                // ---------- Guardado de perfil ----------
                 saveUserData: false,
 
                 // ---------- Mapa ----------
                 map: null,
                 marker: null,
 
-                // ---------- Marca ----------
-                logoUrl: 'https://i.ibb.co/rRx2TLdW/IMG-3702-JPG.jpg', // ⚠️ Reemplazar por el logo real subido (el link de Instagram puede caducar)
+                // ---------- Marca D´JAVIS ----------
+                logoUrl: 'https://i.ibb.co/wZDjVKxQ/IMG-9271.jpg',
                 yapeNumber: '968192632',
                 yapeOwner: 'Javier Ulloque',
                 deliveryTimeEstimate: '30–50 min (puede variar los fines de semana)',
 
-                // ---------- Categorías visibles en la carta ----------
+                // Categorías de la carta
                 categories: [
                     { id: 'ceviches', name: '🐟 Ceviches' },
                     { id: 'anticuchos', name: '🔥 Anticuchos' },
@@ -153,11 +153,6 @@
                     { id: 'bebidas', name: '🥤 Bebidas' }
                 ],
 
-                // ---------- Catálogo de productos ----------
-                // ⚠️ TODOS los platos y precios de abajo son EJEMPLOS de referencia (precios típicos de una
-                // cevichería/anticuchería en Piura). Reemplázalos por la carta real y los precios reales de DJAVY
-                // antes de publicar la página. La estructura (id, nombre, descripción, categoría, precio, imagen)
-                // ya queda lista para que solo edites los valores.
                 products: [
                     { id: 'ceviche-mixto', name: 'Ceviche Mixto', description: 'Pescado y mariscos frescos marinados al momento en limón, con cebolla morada, camote y choclo.', category: 'ceviches', price: 32.0, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80' },
                     { id: 'ceviche-pescado', name: 'Ceviche de Pescado', description: 'Pescado fresco del día en leche de tigre norteña, acompañado de camote y cancha serrana.', category: 'ceviches', price: 28.0, image: 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=500&q=80' },
@@ -166,11 +161,11 @@
                     { id: 'anticucho-corazon', name: 'Anticucho de Corazón', description: 'Brochetas de corazón de res sazonadas y a la parrilla, con papa dorada y choclo.', category: 'anticuchos', price: 22.0, image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=500&q=80' },
                     { id: 'anticuchos-mixtos', name: 'Anticuchos Mixtos', description: 'Combinación de corazón y pollo a la brasa, servidos con las salsas de la casa.', category: 'anticuchos', price: 25.0, image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=500&q=80' },
 
-                    { id: 'parrillada-djavy', name: 'Parrillada DJAVY (para 2)', description: 'Selección de carnes a la parrilla con guarniciones, ideal para compartir.', category: 'parrillas', price: 68.0, image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'parrillada-djavis', name: 'Parrillada D´JAVIS (para 2)', description: 'Selección de carnes a la parrilla con guarniciones, ideal para compartir.', category: 'parrillas', price: 68.0, image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=500&q=80' },
                     { id: 'chicharron-pescado', name: 'Chicharrón de Pescado', description: 'Pescado crocante frito, acompañado de yuca y salsa criolla.', category: 'parrillas', price: 26.0, image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=500&q=80' },
                     { id: 'costillas-cerdo', name: 'Costillas de Cerdo a la Parrilla', description: 'Costillar sazonado y asado al punto, con guarnición de la casa.', category: 'parrillas', price: 30.0, image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=500&q=80' },
 
-                    { id: 'chifles-djavy', name: 'Chifles con Salsa DJAVY', description: 'Chifles piuranos crocantes con la salsa característica de la casa.', category: 'piqueos', price: 12.0, image: 'https://images.unsplash.com/photo-1599490659213-e0b7e0dc5ea1?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'chifles-djavis', name: 'Chifles con Salsa D´JAVIS', description: 'Chifles piuranos crocantes con la salsa característica de la casa.', category: 'piqueos', price: 12.0, image: 'https://images.unsplash.com/photo-1599490659213-e0b7e0dc5ea1?auto=format&fit=crop&w=500&q=80' },
                     { id: 'yuca-frita', name: 'Yuca Frita', description: 'Yuca crocante por fuera y suave por dentro, con salsa criolla.', category: 'piqueos', price: 10.0, image: 'https://images.unsplash.com/photo-1599490659213-e0b7e0dc5ea1?auto=format&fit=crop&w=500&q=80' },
                     { id: 'causa-rellena', name: 'Causa Rellena', description: 'Causa limeña rellena a elección, fresca y bien sazonada.', category: 'piqueos', price: 18.0, image: 'https://images.unsplash.com/photo-1599490659213-e0b7e0dc5ea1?auto=format&fit=crop&w=500&q=80' },
 
@@ -178,7 +173,6 @@
                     { id: 'refresco-maracuya', name: 'Refresco de Maracuyá', description: 'Jugo natural de maracuyá piurana, fresco y bien helado.', category: 'bebidas', price: 8.0, image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=500&q=80' },
                     { id: 'gaseosa-personal', name: 'Gaseosa Personal', description: 'Gaseosa personal 500ml, a elección.', category: 'bebidas', price: 6.0, image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=500&q=80' },
 
-                    // Salsas / ajíes de personalización (precio 0, no aparecen en la carta como plato)
                     { id: 'salsa-aji', name: 'Ají de la Casa', description: 'Ají picante estilo norteño.', category: 'cremas', price: 0.0, image: '' },
                     { id: 'salsa-criolla', name: 'Salsa Criolla', description: 'Cebolla criolla fresca en corte fino.', category: 'cremas', price: 0.0, image: '' },
                     { id: 'salsa-golf', name: 'Salsa Golf', description: 'Clásica salsa golf de la casa.', category: 'cremas', price: 0.0, image: '' },
@@ -186,7 +180,7 @@
                 ],
 
                 initData() {
-                    const savedData = localStorage.getItem('djavy_saved_profile');
+                    const savedData = localStorage.getItem('djavis_saved_profile');
                     if (savedData) {
                         try {
                             const parsed = JSON.parse(savedData);
@@ -227,19 +221,18 @@
                             gpsCoords: this.gpsCoords,
                             selectedSedeId: this.selectedSedeId
                         };
-                        localStorage.setItem('djavy_saved_profile', JSON.stringify(profile));
+                        localStorage.setItem('djavis_saved_profile', JSON.stringify(profile));
                     } else {
-                        localStorage.removeItem('djavy_saved_profile');
+                        localStorage.removeItem('djavis_saved_profile');
                     }
                 },
 
-                // ---------- Horario real: L-V 4pm-12am | S-D 11am-12am (abre los 7 días) ----------
                 updateOpenStatus() {
                     const now = new Date();
                     const peruString = now.toLocaleString("en-US", { timeZone: "America/Lima" });
                     const peruDate = new Date(peruString);
 
-                    const day = peruDate.getDay(); // 0 Dom ... 6 Sáb
+                    const day = peruDate.getDay();
                     const hours = peruDate.getHours();
                     const minutes = peruDate.getMinutes();
                     const currentTimeInMinutes = hours * 60 + minutes;
@@ -251,9 +244,9 @@
                         return;
                     }
 
-                    const isWeekend = (day === 0 || day === 6); // Sábado o Domingo
-                    const openingTime = isWeekend ? (11 * 60) : (16 * 60); // 11:00am ó 4:00pm
-                    const closingTime = 24 * 60; // Medianoche
+                    const isWeekend = (day === 0 || day === 6);
+                    const openingTime = isWeekend ? (11 * 60) : (16 * 60);
+                    const closingTime = 24 * 60;
 
                     this.isOpen = currentTimeInMinutes >= openingTime && currentTimeInMinutes < closingTime;
                 },
@@ -269,14 +262,12 @@
                     return R * c;
                 },
 
-                // ---------- Sedes ----------
                 getSelectedSede() {
                     return this.sedes.find(s => s.id === this.selectedSedeId) || this.sedes[0];
                 },
 
                 selectSede(id) {
                     this.selectedSedeId = id;
-                    // Si ya hay un pin puesto en el mapa, recalculamos la distancia contra la nueva sede
                     if (this.gpsCoords) {
                         const parts = this.gpsCoords.split(',');
                         if (parts.length === 2) {
@@ -718,7 +709,7 @@
 
                     const businessPhone = sede.phone;
 
-                    let msg = `🐟 *NUEVO PEDIDO - DJAVY* 🔥\n\n`;
+                    let msg = `🐟 *NUEVO PEDIDO - D´JAVIS* 🔥\n\n`;
                     msg += `🏬 *Sede:* ${sede.name} — ${sede.address}\n`;
                     msg += `👤 *Cliente:* ${this.checkoutName.trim()}\n`;
                     msg += `📞 *Celular:* ${this.checkoutPhone.trim()}\n`;
@@ -785,7 +776,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-dj-sand text-dj-charcoal font-sans min-h-screen selection:bg-dj-ember selection:text-white transition-all duration-150 relative pb-10"
-      x-data="djavyApp()"
+      x-data="djavisApp()"
       :class="isCartOpen || isDetailOpen ? 'overflow-hidden h-screen' : ''"
       x-init="initData()">
 
@@ -794,12 +785,12 @@
         <div class="max-w-6xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div id="logo-container" class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white overflow-hidden shadow-md border-2 border-dj-ember flex items-center justify-center p-0.5">
-                    <img :src="logoUrl" alt="Logo DJAVY" class="w-full h-full object-cover rounded-full"
+                    <img :src="logoUrl" alt="Logo D´JAVIS" class="w-full h-full object-cover rounded-full"
                          onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex'; document.getElementById('logo-container').classList.add('bg-dj-teal'); document.getElementById('logo-container').classList.remove('bg-white');">
                     <span id="logo-fallback" class="text-white font-display text-2xl hidden">D</span>
                 </div>
                 <div>
-                    <h1 class="font-display font-bold text-2xl md:text-3xl tracking-wide text-dj-teal leading-none">DJAVY</h1>
+                    <h1 class="font-display font-bold text-2xl md:text-3xl tracking-wide text-dj-teal leading-none">D´JAVIS</h1>
                     <p class="text-[9px] md:text-xs font-extrabold tracking-widest text-dj-ember uppercase mt-0.5">Cevichería · Anticuchería</p>
                 </div>
             </div>
@@ -854,7 +845,7 @@
             </div>
 
             <div class="w-44 h-44 md:w-56 md:h-56 rounded-full overflow-hidden shadow-xl border-4 border-dj-ember -rotate-3 hover:rotate-0 transition-all duration-300">
-                <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80" alt="Ceviche DJAVY" class="w-full h-full object-cover">
+                <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80" alt="Ceviche D´JAVIS" class="w-full h-full object-cover">
             </div>
         </div>
     </div>
@@ -1021,7 +1012,7 @@
                         </button>
                         <div class="flex items-center gap-1.5" x-show="currentStep === 'cart'">
                             <i class="fa-solid fa-bowl-food text-dj-ember text-lg sm:text-xl"></i>
-                            <h2 class="font-display font-semibold text-base sm:text-lg tracking-wide">Tu Pedido DJAVY</h2>
+                            <h2 class="font-display font-semibold text-base sm:text-lg tracking-wide">Tu Pedido D´JAVIS</h2>
                         </div>
                         <div class="flex items-center gap-1.5" x-show="currentStep === 'checkout'">
                             <h2 class="font-display font-semibold text-base sm:text-lg tracking-wide">Finalizar Pedido</h2>
@@ -1180,7 +1171,6 @@
                                 </div>
                             </div>
 
-                            <!-- RECOJO EN LOCAL -->
                             <div x-show="checkoutDeliveryType === 'local'" class="bg-dj-sand p-3.5 rounded-xl border border-dj-teal/10 space-y-2">
                                 <p class="text-[11px] font-extrabold text-dj-charcoal">Recojo en: <span x-text="getSelectedSede().name"></span></p>
                                 <p class="text-xs font-semibold text-dj-charcoal/80" x-text="getSelectedSede().address"></p>
