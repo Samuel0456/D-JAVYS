@@ -1,1717 +1,1310 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D'JAVYS - Hamburguesas, Salchipapas & Parrillas en Piura</title>
-    
-    <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+    <title>DJAVY — Cevichería Anticuchería | Pide por WhatsApp</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        djavys: {
-                            black: '#15100D',
-                            dark: '#1F1814',
-                            bg: '#FAF8F5',
+                        dj: {
+                            teal: '#0E5C56',     // Azul-verde mar profundo — ceviche / frescura
+                            tealDark: '#0A433F',
+                            ember: '#C2410C',    // Naranja brasa — anticuchos al carbón
+                            emberDark: '#9A3410',
+                            charcoal: '#211C1A', // Carbón — texto y contraste
+                            sand: '#F7F1E4',     // Fondo arena cálido
+                            lime: '#8BAA36',     // Verde lima — detalle cítrico
                             card: '#FFFFFF',
-                            surface: '#F3EFEA',
-                            border: '#E5DED6',
-                            red: '#D92323',
-                            redhover: '#B91C1C',
-                            orange: '#EA580C',
-                            gold: '#D97706',
-                            green: '#059669',
-                            purple: '#7C3AED'
+                            line: '#E7DBC0'
                         }
                     },
                     fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                        heading: ['Outfit', 'sans-serif']
-                    },
-                    animation: {
-                        'flame': 'flameGlow 2s infinite ease-in-out',
-                        'bounce-subtle': 'subtleBounce 0.3s ease-out'
-                    },
-                    keyframes: {
-                        flameGlow: {
-                            '0%, 100%': { boxShadow: '0 0 15px rgba(217, 35, 35, 0.3)' },
-                            '50%': { boxShadow: '0 0 25px rgba(234, 88, 12, 0.5)' }
-                        },
-                        subtleBounce: {
-                            '0%': { transform: 'scale(1)' },
-                            '50%': { transform: 'scale(1.12)' },
-                            '100%': { transform: 'scale(1)' }
-                        }
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Fraunces"', 'serif'],
                     }
                 }
             }
         }
     </script>
-    
-    <!-- FontAwesome 6 Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Leaflet Map CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        body {
-            background-color: #FAF8F5;
-            color: #1C1917;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        h1, h2, h3, h4, h5, .font-heading {
-            font-family: 'Outfit', sans-serif;
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #FAF8F5;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #D7CCC0;
-            border-radius: 99px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #D92323;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .leaflet-container {
-            width: 100%;
-            height: 100%;
-            border-radius: 1rem;
-            z-index: 10;
-        }
-        .food-badge-red {
-            background: linear-gradient(135deg, #D92323 0%, #B91C1C 100%);
-        }
-        .food-badge-gold {
-            background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
-        }
+        html { scroll-behavior: smooth; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .leaflet-container { z-index: 10 !important; }
     </style>
+
+    <script>
+        window.djavyApp = function() {
+            return {
+                // ---------- Navegación / catálogo ----------
+                selectedCategory: 'todas',
+                searchTerm: '',
+                cart: [],
+                isCartOpen: false,
+                currentStep: 'cart',
+                errorMessage: '',
+                floatingNotification: '',
+
+                // ---------- Horario ----------
+                // Horario real: Lunes a Viernes 4:00pm - 12:00am | Sábado y Domingo 11:00am - 12:00am
+                // Cambia a 'TEST', 'PRUEBAS' o 'SIEMPRE' para forzar la tienda abierta mientras pruebas la página.
+                activeSchedule: 'NORMAL',
+                isOpen: false,
+
+                // ---------- Detalle de producto / personalización ----------
+                isDetailOpen: false,
+                selectedProductForDetail: null,
+                modalQuantity: 1,
+                detailCreamsSelections: [ [] ],
+                // Categorías donde se puede elegir salsa/ají por unidad
+                customizableCategories: ['ceviches', 'anticuchos', 'parrillas'],
+
+                // ---------- Checkout ----------
+                checkoutName: '',
+                checkoutPhone: '',
+                checkoutDeliveryType: 'delivery',
+                checkoutAddress: '',
+                checkoutReference: '',
+                checkoutNotes: '',
+                gpsCoords: '',
+
+                checkoutPaymentMethod: 'yape',
+                cashAmountToPay: '',
+
+                // ---------- Delivery por distancia ----------
+                deliveryDistance: 0,
+                deliveryCost: 0,
+                isOutOfRange: false,
+
+                // ---------- Sedes ----------
+                // ⚠️ Verificar antes de publicar: el teléfono de "Puente Rojo" es un marcador (placeholder) y
+                // las coordenadas de "Country" son aproximadas (zona Miraflores). Corregir con la ubicación exacta.
+                selectedSedeId: 'puente-rojo',
+                sedes: [
+                    {
+                        id: 'puente-rojo',
+                        name: 'Puente Rojo',
+                        address: 'Calle Lima Norte 174, frente al Puente Eguiguren (Puente Rojo)',
+                        phone: '51900000000', // ⚠️ PENDIENTE: confirmar número de WhatsApp de esta sede
+                        lat: -5.190920,
+                        lng: -80.624979
+                    },
+                    {
+                        id: 'canaveral',
+                        name: 'Cañaveral',
+                        address: 'Av. Progreso, Castilla (frente a Pizzazas)',
+                        phone: '51906903444',
+                        lat: -5.214637,
+                        lng: -80.623184
+                    },
+                    {
+                        id: 'country',
+                        name: 'Country',
+                        address: 'C.C. Country, Urb. Miraflores', // ⚠️ Verificar dirección y coordenadas exactas
+                        phone: '51903133226',
+                        lat: -5.171333,
+                        lng: -80.610078
+                    },
+                    {
+                        id: 'san-jose',
+                        name: 'San José',
+                        address: 'Av. César Vallejo 105, Urb. San José',
+                        phone: '51981083311',
+                        lat: -5.189767,
+                        lng: -80.648418
+                    }
+                ],
+
+                // ---------- Guardado de perfil ----------
+                saveUserData: false,
+
+                // ---------- Mapa ----------
+                map: null,
+                marker: null,
+
+                // ---------- Marca ----------
+                logoUrl: 'https://i.ibb.co/rRx2TLdW/IMG-3702-JPG.jpg', // ⚠️ Reemplazar por el logo real subido (el link de Instagram puede caducar)
+                yapeNumber: '968192632',
+                yapeOwner: 'Javier Ulloque',
+                deliveryTimeEstimate: '30–50 min (puede variar los fines de semana)',
+
+                // ---------- Categorías visibles en la carta ----------
+                categories: [
+                    { id: 'ceviches', name: '🐟 Ceviches' },
+                    { id: 'anticuchos', name: '🔥 Anticuchos' },
+                    { id: 'parrillas', name: '🥩 Parrillas' },
+                    { id: 'piqueos', name: '🍟 Piqueos' },
+                    { id: 'bebidas', name: '🥤 Bebidas' }
+                ],
+
+                // ---------- Catálogo de productos ----------
+                // ⚠️ TODOS los platos y precios de abajo son EJEMPLOS de referencia (precios típicos de una
+                // cevichería/anticuchería en Piura). Reemplázalos por la carta real y los precios reales de DJAVY
+                // antes de publicar la página. La estructura (id, nombre, descripción, categoría, precio, imagen)
+                // ya queda lista para que solo edites los valores.
+                products: [
+                    { id: 'ceviche-mixto', name: 'Ceviche Mixto', description: 'Pescado y mariscos frescos marinados al momento en limón, con cebolla morada, camote y choclo.', category: 'ceviches', price: 32.0, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'ceviche-pescado', name: 'Ceviche de Pescado', description: 'Pescado fresco del día en leche de tigre norteña, acompañado de camote y cancha serrana.', category: 'ceviches', price: 28.0, image: 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'ceviche-conchas', name: 'Ceviche de Conchas Negras', description: 'Conchas negras piuranas en su punto, con leche de tigre, culantro y un toque de ají.', category: 'ceviches', price: 38.0, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80' },
+
+                    { id: 'anticucho-corazon', name: 'Anticucho de Corazón', description: 'Brochetas de corazón de res sazonadas y a la parrilla, con papa dorada y choclo.', category: 'anticuchos', price: 22.0, image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'anticuchos-mixtos', name: 'Anticuchos Mixtos', description: 'Combinación de corazón y pollo a la brasa, servidos con las salsas de la casa.', category: 'anticuchos', price: 25.0, image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=500&q=80' },
+
+                    { id: 'parrillada-djavy', name: 'Parrillada DJAVY (para 2)', description: 'Selección de carnes a la parrilla con guarniciones, ideal para compartir.', category: 'parrillas', price: 68.0, image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'chicharron-pescado', name: 'Chicharrón de Pescado', description: 'Pescado crocante frito, acompañado de yuca y salsa criolla.', category: 'parrillas', price: 26.0, image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'costillas-cerdo', name: 'Costillas de Cerdo a la Parrilla', description: 'Costillar sazonado y asado al punto, con guarnición de la casa.', category: 'parrillas', price: 30.0, image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=500&q=80' },
+
+                    { id: 'chifles-djavy', name: 'Chifles con Salsa DJAVY', description: 'Chifles piuranos crocantes con la salsa característica de la casa.', category: 'piqueos', price: 12.0, image: 'https://images.unsplash.com/photo-1599490659213-e0b7e0dc5ea1?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'yuca-frita', name: 'Yuca Frita', description: 'Yuca crocante por fuera y suave por dentro, con salsa criolla.', category: 'piqueos', price: 10.0, image: 'https://images.unsplash.com/photo-1599490659213-e0b7e0dc5ea1?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'causa-rellena', name: 'Causa Rellena', description: 'Causa limeña rellena a elección, fresca y bien sazonada.', category: 'piqueos', price: 18.0, image: 'https://images.unsplash.com/photo-1599490659213-e0b7e0dc5ea1?auto=format&fit=crop&w=500&q=80' },
+
+                    { id: 'chicha-morada', name: 'Chicha Morada', description: 'Chicha de maíz morado de la casa, hervida con canela y un toque de limón.', category: 'bebidas', price: 8.0, image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'refresco-maracuya', name: 'Refresco de Maracuyá', description: 'Jugo natural de maracuyá piurana, fresco y bien helado.', category: 'bebidas', price: 8.0, image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=500&q=80' },
+                    { id: 'gaseosa-personal', name: 'Gaseosa Personal', description: 'Gaseosa personal 500ml, a elección.', category: 'bebidas', price: 6.0, image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=500&q=80' },
+
+                    // Salsas / ajíes de personalización (precio 0, no aparecen en la carta como plato)
+                    { id: 'salsa-aji', name: 'Ají de la Casa', description: 'Ají picante estilo norteño.', category: 'cremas', price: 0.0, image: '' },
+                    { id: 'salsa-criolla', name: 'Salsa Criolla', description: 'Cebolla criolla fresca en corte fino.', category: 'cremas', price: 0.0, image: '' },
+                    { id: 'salsa-golf', name: 'Salsa Golf', description: 'Clásica salsa golf de la casa.', category: 'cremas', price: 0.0, image: '' },
+                    { id: 'salsa-rocoto', name: 'Rocoto Molido', description: 'Rocoto molido bien picante.', category: 'cremas', price: 0.0, image: '' }
+                ],
+
+                initData() {
+                    const savedData = localStorage.getItem('djavy_saved_profile');
+                    if (savedData) {
+                        try {
+                            const parsed = JSON.parse(savedData);
+                            this.checkoutName = parsed.name || '';
+                            this.checkoutPhone = parsed.phone || '';
+                            this.checkoutDeliveryType = parsed.deliveryType || 'delivery';
+                            this.checkoutAddress = parsed.address || '';
+                            this.checkoutReference = parsed.reference || '';
+                            this.gpsCoords = parsed.gpsCoords || '';
+                            this.selectedSedeId = parsed.selectedSedeId || 'puente-rojo';
+                            this.saveUserData = true;
+                        } catch (e) {
+                            console.error("Error al cargar perfil guardado", e);
+                        }
+                    }
+
+                    this.updateOpenStatus();
+                    setInterval(() => { this.updateOpenStatus(); }, 30000);
+
+                    this.$watch('saveUserData', () => this.saveProfileToLocalStorage());
+                    this.$watch('checkoutName', () => this.saveProfileToLocalStorage());
+                    this.$watch('checkoutPhone', () => this.saveProfileToLocalStorage());
+                    this.$watch('checkoutDeliveryType', () => this.saveProfileToLocalStorage());
+                    this.$watch('checkoutAddress', () => this.saveProfileToLocalStorage());
+                    this.$watch('checkoutReference', () => this.saveProfileToLocalStorage());
+                    this.$watch('gpsCoords', () => this.saveProfileToLocalStorage());
+                    this.$watch('selectedSedeId', () => this.saveProfileToLocalStorage());
+                },
+
+                saveProfileToLocalStorage() {
+                    if (this.saveUserData) {
+                        const profile = {
+                            name: this.checkoutName.trim(),
+                            phone: this.checkoutPhone.trim(),
+                            deliveryType: this.checkoutDeliveryType,
+                            address: this.checkoutAddress.trim(),
+                            reference: this.checkoutReference.trim(),
+                            gpsCoords: this.gpsCoords,
+                            selectedSedeId: this.selectedSedeId
+                        };
+                        localStorage.setItem('djavy_saved_profile', JSON.stringify(profile));
+                    } else {
+                        localStorage.removeItem('djavy_saved_profile');
+                    }
+                },
+
+                // ---------- Horario real: L-V 4pm-12am | S-D 11am-12am (abre los 7 días) ----------
+                updateOpenStatus() {
+                    const now = new Date();
+                    const peruString = now.toLocaleString("en-US", { timeZone: "America/Lima" });
+                    const peruDate = new Date(peruString);
+
+                    const day = peruDate.getDay(); // 0 Dom ... 6 Sáb
+                    const hours = peruDate.getHours();
+                    const minutes = peruDate.getMinutes();
+                    const currentTimeInMinutes = hours * 60 + minutes;
+
+                    const activeUpper = this.activeSchedule ? this.activeSchedule.toUpperCase().trim() : '';
+
+                    if (['TEST', 'TESTING', 'PRUEBAS', 'SIEMPRE'].includes(activeUpper)) {
+                        this.isOpen = true;
+                        return;
+                    }
+
+                    const isWeekend = (day === 0 || day === 6); // Sábado o Domingo
+                    const openingTime = isWeekend ? (11 * 60) : (16 * 60); // 11:00am ó 4:00pm
+                    const closingTime = 24 * 60; // Medianoche
+
+                    this.isOpen = currentTimeInMinutes >= openingTime && currentTimeInMinutes < closingTime;
+                },
+
+                calculateDistance(lat1, lon1, lat2, lon2) {
+                    const R = 6371;
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLon = (lon2 - lon1) * Math.PI / 180;
+                    const a =
+                        Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    return R * c;
+                },
+
+                // ---------- Sedes ----------
+                getSelectedSede() {
+                    return this.sedes.find(s => s.id === this.selectedSedeId) || this.sedes[0];
+                },
+
+                selectSede(id) {
+                    this.selectedSedeId = id;
+                    // Si ya hay un pin puesto en el mapa, recalculamos la distancia contra la nueva sede
+                    if (this.gpsCoords) {
+                        const parts = this.gpsCoords.split(',');
+                        if (parts.length === 2) {
+                            const lat = parseFloat(parts[0]);
+                            const lng = parseFloat(parts[1]);
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                this.onMarkerMove(lat, lng);
+                            }
+                        }
+                    }
+                },
+
+                isCustomizable(category) {
+                    return this.customizableCategories.includes(category);
+                },
+
+                onMarkerMove(lat, lng) {
+                    this.gpsCoords = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    const sede = this.getSelectedSede();
+                    const dist = this.calculateDistance(sede.lat, sede.lng, lat, lng);
+                    this.deliveryDistance = dist;
+                    this.updateDeliveryCost(dist);
+                },
+
+                updateDeliveryCost(dist) {
+                    if (dist < 1.0) {
+                        this.deliveryCost = 3.0;
+                        this.isOutOfRange = false;
+                    } else if (dist >= 1.0 && dist <= 3.0) {
+                        this.deliveryCost = 6.0;
+                        this.isOutOfRange = false;
+                    } else if (dist > 3.0 && dist <= 6.0) {
+                        this.deliveryCost = 9.0;
+                        this.isOutOfRange = false;
+                    } else if (dist > 6.0 && dist <= 9.0) {
+                        this.deliveryCost = 13.0;
+                        this.isOutOfRange = false;
+                    } else {
+                        this.deliveryCost = 0;
+                        this.isOutOfRange = true;
+                    }
+                },
+
+                getCurrentLocationGPS() {
+                    if (!navigator.geolocation) {
+                        this.triggerNotification("❌ Tu navegador no soporta geolocalización.");
+                        return;
+                    }
+                    this.triggerNotification("⏳ Conectando con el GPS...");
+
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            const accuracy = position.coords.accuracy;
+                            const sede = this.getSelectedSede();
+
+                            const dist = this.calculateDistance(sede.lat, sede.lng, lat, lng);
+
+                            if (dist > 15.0 || accuracy > 1000) {
+                                const fallbackLat = sede.lat;
+                                const fallbackLng = sede.lng;
+                                if (this.map) { this.map.setView([fallbackLat, fallbackLng], 16); }
+                                if (this.marker) { this.marker.setLatLng([fallbackLat, fallbackLng]); }
+                                this.onMarkerMove(fallbackLat, fallbackLng);
+                                this.reverseGeocode(fallbackLat, fallbackLng);
+                                this.triggerNotification("💻 Ubicación imprecisa (común en PC). Te ubicamos cerca de la sede para arrastrar el pin.");
+                            } else {
+                                if (this.map) { this.map.setView([lat, lng], 16); }
+                                if (this.marker) { this.marker.setLatLng([lat, lng]); }
+                                this.onMarkerMove(lat, lng);
+                                this.reverseGeocode(lat, lng);
+                                this.triggerNotification("✅ GPS fijado correctamente.");
+                            }
+                        },
+                        (error) => {
+                            console.error(error);
+                            this.triggerNotification("❌ No pudimos acceder a tu GPS. Activa tus permisos de ubicación.");
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                },
+
+                async reverseGeocode(lat, lng) {
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`, {
+                            headers: { 'Accept-Language': 'es' }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data && data.address) {
+                                const addr = data.address;
+                                const addressParts = [];
+                                if (addr.road) addressParts.push(addr.road);
+                                if (addr.house_number) addressParts.push(addr.house_number);
+                                if (addr.suburb) addressParts.push(addr.suburb);
+                                if (addr.neighbourhood && !addr.suburb) addressParts.push(addr.neighbourhood);
+                                if (addr.city_district) addressParts.push(addr.city_district);
+
+                                this.checkoutAddress = addressParts.length > 0
+                                    ? addressParts.join(', ')
+                                    : data.display_name.split(',').slice(0, 3).join(',').trim();
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error Nominatim Reverse:", e);
+                    }
+                },
+
+                async geocodeAddress() {
+                    if (!this.checkoutAddress.trim()) {
+                        this.triggerNotification("⚠️ Escribe una dirección para buscarla.");
+                        return;
+                    }
+                    this.triggerNotification("⏳ Buscando dirección en el mapa...");
+                    try {
+                        const query = encodeURIComponent(`${this.checkoutAddress.trim()}, Piura, Peru`);
+                        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`, {
+                            headers: { 'Accept-Language': 'es' }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data && data.length > 0) {
+                                const lat = parseFloat(data[0].lat);
+                                const lng = parseFloat(data[0].lon);
+
+                                this.gpsCoords = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                                this.onMarkerMove(lat, lng);
+
+                                if (this.map) { this.map.setView([lat, lng], 16); }
+                                if (this.marker) { this.marker.setLatLng([lat, lng]); }
+                                this.triggerNotification("🎯 Mapa fijado en tu dirección.");
+                            } else {
+                                this.triggerNotification("❌ No se encontró la dirección. Intenta arrastrar el pin manualmente.");
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        this.triggerNotification("❌ Error al conectar con el servidor de mapas.");
+                    }
+                },
+
+                async geocodeAddressSilently() {
+                    if (!this.checkoutAddress.trim() || this.checkoutAddress.length < 5) return;
+                    try {
+                        const query = encodeURIComponent(`${this.checkoutAddress.trim()}, Piura, Peru`);
+                        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`, {
+                            headers: { 'Accept-Language': 'es' }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data && data.length > 0) {
+                                const lat = parseFloat(data[0].lat);
+                                const lng = parseFloat(data[0].lon);
+
+                                this.gpsCoords = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                                const sede = this.getSelectedSede();
+                                const dist = this.calculateDistance(sede.lat, sede.lng, lat, lng);
+                                this.deliveryDistance = dist;
+                                this.updateDeliveryCost(dist);
+
+                                if (this.map && this.marker) {
+                                    this.map.setView([lat, lng], 16);
+                                    this.marker.setLatLng([lat, lng]);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Geocoding silencioso falló:", e);
+                    }
+                },
+
+                getFilteredProducts(categoryId) {
+                    return this.products.filter(p => {
+                        const matchesCategory = p.category === categoryId;
+                        const matchesSearch = p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+                                              p.description.toLowerCase().includes(this.searchTerm.toLowerCase());
+                        return matchesCategory && matchesSearch;
+                    });
+                },
+
+                openProductDetail(product) {
+                    this.selectedProductForDetail = product;
+                    this.modalQuantity = 1;
+                    this.detailCreamsSelections = [ [] ];
+                    this.isDetailOpen = true;
+                },
+
+                shouldShowCategory(categoryId) {
+                    return this.selectedCategory === 'todas' || this.selectedCategory === categoryId;
+                },
+
+                getProductsCountInCategory(categoryId) {
+                    return this.products.filter(p => p.category === categoryId).length;
+                },
+
+                getCremas() {
+                    return this.products.filter(p => p.category === 'cremas');
+                },
+
+                toggleCrema(itemIndex, cremaName) {
+                    if (!this.detailCreamsSelections[itemIndex]) {
+                        this.detailCreamsSelections[itemIndex] = [];
+                    }
+                    let selection = [...this.detailCreamsSelections[itemIndex]];
+                    const idx = selection.indexOf(cremaName);
+                    if (idx > -1) { selection.splice(idx, 1); } else { selection.push(cremaName); }
+                    this.detailCreamsSelections[itemIndex] = selection;
+                },
+
+                decreaseModalQty() {
+                    if (this.modalQuantity > 1) {
+                        this.modalQuantity--;
+                        this.detailCreamsSelections.pop();
+                    }
+                },
+
+                increaseModalQty() {
+                    this.modalQuantity++;
+                    this.detailCreamsSelections.push([]);
+                },
+
+                addToCartWithQty(product, qty) {
+                    if (!this.isOpen) {
+                        this.triggerNotification("❌ No puedes agregar productos. La cocina está cerrada.");
+                        return;
+                    }
+                    const amount = parseInt(qty) || 1;
+
+                    if (this.isCustomizable(product.category)) {
+                        for (let i = 0; i < amount; i++) {
+                            const selectedCreams = this.detailCreamsSelections[i] || [];
+                            const creamsKey = [...selectedCreams].sort().join(',');
+                            const cartItemId = `${product.id}-${creamsKey}`;
+
+                            const existingItem = this.cart.find(item => item.id === cartItemId);
+                            if (existingItem) {
+                                existingItem.quantity += 1;
+                            } else {
+                                this.cart.push({
+                                    id: cartItemId,
+                                    productId: product.id,
+                                    name: product.name,
+                                    price: product.price,
+                                    image: product.image,
+                                    category: product.category,
+                                    quantity: 1,
+                                    creams: [...selectedCreams]
+                                });
+                            }
+                        }
+                        this.triggerNotification(`🛒 Agregado: ${amount}x ${product.name} con sus salsas.`);
+                    } else {
+                        const existingItem = this.cart.find(item => item.id === product.id);
+                        if (existingItem) {
+                            existingItem.quantity += amount;
+                        } else {
+                            this.cart.push({
+                                id: product.id,
+                                productId: product.id,
+                                name: product.name,
+                                price: product.price,
+                                image: product.image,
+                                category: product.category,
+                                quantity: amount,
+                                creams: []
+                            });
+                        }
+                        this.triggerNotification(`🛒 Agregado: ${amount}x ${product.name}`);
+                    }
+                },
+
+                increaseQty(item) { item.quantity++; },
+
+                decreaseQty(item) {
+                    if (item.quantity > 1) { item.quantity--; } else { this.removeItem(item); }
+                },
+
+                removeItem(item) { this.cart = this.cart.filter(i => i.id !== item.id); },
+
+                getCartItemsCount() { return this.cart.reduce((sum, item) => sum + item.quantity, 0); },
+
+                getCartTotal() { return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0); },
+
+                getCartTotalWithDelivery() {
+                    const subtotal = this.getCartTotal();
+                    const delivery = (this.checkoutDeliveryType === 'delivery' && !this.isOutOfRange) ? this.deliveryCost : 0;
+                    return subtotal + delivery;
+                },
+
+                scrollToMenu(categoryId) {
+                    this.selectedCategory = categoryId;
+                    setTimeout(() => {
+                        const el = document.getElementById(`sec-${categoryId}`);
+                        if (el) { window.scrollTo({ top: el.offsetTop - 120, behavior: 'smooth' }); }
+                    }, 100);
+                },
+
+                goToCheckout() {
+                    if (!this.isOpen) {
+                        this.errorMessage = "La cocina está cerrada. No es posible proceder al pago.";
+                        return;
+                    }
+                    this.currentStep = 'checkout';
+                    this.initMap();
+                },
+
+                initMap() {
+                    if (this.map) {
+                        setTimeout(() => { this.map.invalidateSize(); }, 200);
+                        return;
+                    }
+
+                    setTimeout(async () => {
+                        const sede = this.getSelectedSede();
+                        let defaultLat = sede.lat;
+                        let defaultLng = sede.lng;
+                        let coordsSet = false;
+
+                        if (this.gpsCoords) {
+                            const parts = this.gpsCoords.split(',');
+                            if (parts.length === 2) {
+                                const parsedLat = parseFloat(parts[0]);
+                                const parsedLng = parseFloat(parts[1]);
+                                if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
+                                    defaultLat = parsedLat;
+                                    defaultLng = parsedLng;
+                                    coordsSet = true;
+                                }
+                            }
+                        }
+
+                        if (!coordsSet && this.checkoutAddress.trim()) {
+                            await this.geocodeAddressSilently();
+                            if (this.gpsCoords) {
+                                const parts = this.gpsCoords.split(',');
+                                if (parts.length === 2) {
+                                    const parsedLat = parseFloat(parts[0]);
+                                    const parsedLng = parseFloat(parts[1]);
+                                    if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
+                                        defaultLat = parsedLat;
+                                        defaultLng = parsedLng;
+                                    }
+                                }
+                            }
+                        }
+
+                        this.map = L.map('map').setView([defaultLat, defaultLng], 15);
+
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap'
+                        }).addTo(this.map);
+
+                        const pinIcon = L.divIcon({
+                            html: `<i class="fa-solid fa-location-dot text-dj-ember text-3xl drop-shadow-md"></i>`,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 30],
+                            className: 'bg-transparent border-none'
+                        });
+
+                        this.marker = L.marker([defaultLat, defaultLng], { draggable: true, icon: pinIcon }).addTo(this.map);
+
+                        this.onMarkerMove(defaultLat, defaultLng);
+
+                        this.marker.on('dragend', () => {
+                            const pos = this.marker.getLatLng();
+                            this.onMarkerMove(pos.lat, pos.lng);
+                            this.reverseGeocode(pos.lat, pos.lng);
+                        });
+
+                        this.map.on('click', (e) => {
+                            const pos = e.latlng;
+                            this.marker.setLatLng(pos);
+                            this.onMarkerMove(pos.lat, pos.lng);
+                            this.reverseGeocode(pos.lat, pos.lng);
+                        });
+
+                    }, 250);
+                },
+
+                copyToClipboard(text) {
+                    const el = document.createElement('textarea');
+                    el.value = text;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    this.triggerNotification("📞 ¡Número de Yape/Plin copiado!");
+                },
+
+                triggerNotification(msg) {
+                    this.floatingNotification = msg;
+                    setTimeout(() => {
+                        if (this.floatingNotification === msg) { this.floatingNotification = ''; }
+                    }, 3500);
+                },
+
+                sendToWhatsApp() {
+                    this.errorMessage = '';
+                    const sede = this.getSelectedSede();
+
+                    if (!this.isOpen) {
+                        this.errorMessage = "Lo sentimos, la cocina cerró. No es posible procesar el pedido.";
+                        return;
+                    }
+                    if (!this.checkoutName.trim()) {
+                        this.errorMessage = "Debes ingresar tu Nombre completo.";
+                        return;
+                    }
+                    if (!this.checkoutPhone.trim() || this.checkoutPhone.length < 9) {
+                        this.errorMessage = "Debes ingresar un número de Celular válido (9 dígitos).";
+                        return;
+                    }
+                    if (this.checkoutDeliveryType === 'delivery') {
+                        if (!this.checkoutAddress.trim()) {
+                            this.errorMessage = "Por favor, ingresa tu dirección exacta.";
+                            return;
+                        }
+                        if (this.isOutOfRange) {
+                            this.errorMessage = "La ubicación elegida está fuera del rango de reparto de esta sede (Límite: 9 km).";
+                            return;
+                        }
+                    }
+
+                    if (this.checkoutPaymentMethod === 'cash') {
+                        const amountToPayNum = parseFloat(this.cashAmountToPay);
+                        const totalToPay = this.getCartTotalWithDelivery();
+                        if (!this.cashAmountToPay || isNaN(amountToPayNum)) {
+                            this.errorMessage = "Por favor, ingresa con cuánto vas a pagar en efectivo.";
+                            return;
+                        }
+                        if (amountToPayNum < totalToPay) {
+                            this.errorMessage = `El monto de pago (S/ ${amountToPayNum.toFixed(2)}) debe ser igual o mayor al total (S/ ${totalToPay.toFixed(2)}).`;
+                            return;
+                        }
+                    }
+
+                    if (this.saveUserData) { this.saveProfileToLocalStorage(); }
+
+                    const businessPhone = sede.phone;
+
+                    let msg = `🐟 *NUEVO PEDIDO - DJAVY* 🔥\n\n`;
+                    msg += `🏬 *Sede:* ${sede.name} — ${sede.address}\n`;
+                    msg += `👤 *Cliente:* ${this.checkoutName.trim()}\n`;
+                    msg += `📞 *Celular:* ${this.checkoutPhone.trim()}\n`;
+                    msg += `🛵 *Tipo de Entrega:* ${this.checkoutDeliveryType === 'delivery' ? 'Delivery' : 'Recojo en Local'}\n`;
+
+                    if (this.checkoutDeliveryType === 'delivery') {
+                        msg += `📍 *Dirección:* ${this.checkoutAddress.trim()}\n`;
+                        if (this.checkoutReference.trim()) {
+                            msg += `🏢 *Referencia:* ${this.checkoutReference.trim()}\n`;
+                        }
+                        msg += `🗺️ *Ubicación GPS:* https://www.google.com/maps/search/?api=1&query=${this.gpsCoords.replace(/\s/g, '')}\n`;
+                        msg += `📏 *Distancia a la sede:* ${this.deliveryDistance.toFixed(2)} km\n`;
+                    } else {
+                        msg += `🏢 *Punto de Recojo:* ${sede.name} - ${sede.address}\n`;
+                    }
+
+                    if (this.checkoutNotes.trim()) {
+                        msg += `📝 *Especificaciones:* ${this.checkoutNotes.trim()}\n`;
+                    }
+
+                    if (this.checkoutPaymentMethod === 'yape') {
+                        msg += `💵 *Método de Pago:* Yape/Plin (${this.yapeOwner})\n\n`;
+                    } else {
+                        const totalToPay = this.getCartTotalWithDelivery();
+                        const change = parseFloat(this.cashAmountToPay) - totalToPay;
+                        msg += `💵 *Método de Pago:* Efectivo\n`;
+                        msg += `💰 *Paga con:* S/ ${parseFloat(this.cashAmountToPay).toFixed(2)}\n`;
+                        msg += `🪙 *Vuelto requerido:* S/ ${change.toFixed(2)}\n\n`;
+                    }
+
+                    msg += `📋 *PRODUCTOS PEDIDOS:* \n`;
+
+                    this.cart.forEach(item => {
+                        let creamsStr = '';
+                        if (item.creams && item.creams.length > 0) {
+                            creamsStr = ` [Salsas: ${item.creams.join(', ')}]`;
+                        }
+                        msg += `• ${item.quantity}x _${item.name}_${creamsStr} | S/ ${(item.price * item.quantity).toFixed(2)}\n`;
+                    });
+
+                    const subtotal = this.getCartTotal();
+                    const delivery = this.checkoutDeliveryType === 'delivery' ? this.deliveryCost : 0;
+                    const total = subtotal + delivery;
+
+                    msg += `\n📦 *Subtotal:* S/ ${subtotal.toFixed(2)}\n`;
+                    if (this.checkoutDeliveryType === 'delivery') {
+                        msg += `🚚 *Envío:* S/ ${delivery.toFixed(2)}\n`;
+                    }
+                    msg += `💰 *TOTAL GENERAL: S/ ${total.toFixed(2)}*\n\n`;
+
+                    if (this.checkoutPaymentMethod === 'yape') {
+                        msg += `⚡ _Por favor indícame si el Yape/Plin ya fue enviado para iniciar la preparación._`;
+                    } else {
+                        msg += `⚡ _Por favor confírmame el pedido para iniciar la preparación inmediata._`;
+                    }
+
+                    const url = `https://api.whatsapp.com/send?phone=${businessPhone}&text=${encodeURIComponent(msg)}`;
+                    window.open(url, '_blank');
+                }
+            };
+        };
+    </script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="min-h-screen flex flex-col selection:bg-djavys-red selection:text-white pb-24 md:pb-0">
+<body class="bg-dj-sand text-dj-charcoal font-sans min-h-screen selection:bg-dj-ember selection:text-white transition-all duration-150 relative pb-10"
+      x-data="djavyApp()"
+      :class="isCartOpen || isDetailOpen ? 'overflow-hidden h-screen' : ''"
+      x-init="initData()">
 
-    <!-- Top Announcement Bar & Operating Mode Controller -->
-    <header class="sticky top-0 z-40 bg-djavys-black text-white border-b border-stone-800 shadow-xl">
-        <div id="status-bar" class="bg-[#0D0907] text-xs py-2 px-4 text-center border-b border-stone-800/80 flex flex-wrap justify-between items-center gap-2">
-            <div class="flex items-center gap-2 mx-auto sm:mx-0">
-                <span id="store-status-badge" class="px-3 py-1 rounded-full font-extrabold text-[11px] tracking-wider uppercase flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                    VERIFICANDO HORARIO...
-                </span>
-                <span id="store-status-time" class="text-stone-300 font-semibold hidden sm:inline text-[11px]">
-                    <i class="fa-regular fa-clock text-djavys-gold mr-1"></i>Hora Perú: --:--
-                </span>
-            </div>
-            
-            <!-- Operating Mode Selector for Testing -->
-            <div class="flex items-center gap-2 mx-auto sm:mx-0 text-stone-300">
-                <i class="fa-solid fa-sliders text-djavys-red text-xs"></i>
-                <label for="mode-selector" class="text-[11px] font-bold text-stone-300">Modo Horario:</label>
-                <select id="mode-selector" onchange="changeOperationMode(this.value)" class="bg-stone-900 text-stone-100 text-xs rounded-lg border border-stone-700 px-2.5 py-1 focus:outline-none focus:border-djavys-red cursor-pointer font-medium">
-                    <option value="OFFICIAL">Horario Oficial (L-V 4pm-12am | S-D 11am-12am)</option>
-                    <option value="SD">Modo Fin de Semana (S-D 6:30pm-11pm)</option>
-                    <option value="VSD">Modo Fin de Semana Ampliado (V-S-D 6:30pm-11pm)</option>
-                    <option value="TEST" selected>Modo Testeo / Prueba (Abierto 24/7)</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Main Branding Header -->
-        <div class="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-                <div class="relative group shrink-0">
-                    <img id="brand-logo" 
-                         src="https://instagram.fpiu1-1.fna.fbcdn.net/v/t51.82787-19/533684047_18402408976119412_4409753760324661629_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDI0LmMyIn0&_nc_ht=instagram.fpiu1-1.fna.fbcdn.net&_nc_cat=104&_nc_oc=Q6cZ2gFxU3-By1qa8KxCclSzreZ9JeDiBtD8D7VMohwra1wsamM49_Y1KRbfHY3oYsBX8tQERSAjFcXTkIcgbYfX2fgx&_nc_ohc=v2nj_EAJ1KsQ7kNvwF5V7IG&_nc_gid=ggSR43IDOgvLyoADdVqujA&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AQDocUWX3C0QR1AqoZyKedqPw67-XJ4UOmCGnGXy1vU4kw&oe=6A65F0FE&_nc_sid=7a9f4b" 
-                         onerror="this.onerror=null; this.src='https://placehold.co/120x120/D92323/ffffff?text=D%27JAVYS'" 
-                         alt="D'JAVYS" 
-                         class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border-2 border-djavys-red shadow-lg shadow-djavys-red/30 group-hover:scale-105 transition duration-300">
-                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-djavys-black rounded-full"></div>
+    <!-- HEADER -->
+    <header class="bg-white border-b border-dj-teal/10 py-4 px-4 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div id="logo-container" class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white overflow-hidden shadow-md border-2 border-dj-ember flex items-center justify-center p-0.5">
+                    <img :src="logoUrl" alt="Logo DJAVY" class="w-full h-full object-cover rounded-full"
+                         onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex'; document.getElementById('logo-container').classList.add('bg-dj-teal'); document.getElementById('logo-container').classList.remove('bg-white');">
+                    <span id="logo-fallback" class="text-white font-display text-2xl hidden">D</span>
                 </div>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white font-heading leading-tight flex items-center gap-2">
-                        D'JAVYS
-                        <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-gradient-to-r from-djavys-red to-djavys-orange text-white uppercase tracking-wider">PIURA</span>
-                    </h1>
-                    <p class="text-xs text-stone-300 font-semibold">Hamburguesas, Salchipapas & Mostros Parrilleros 🔥</p>
+                    <h1 class="font-display font-bold text-2xl md:text-3xl tracking-wide text-dj-teal leading-none">DJAVY</h1>
+                    <p class="text-[9px] md:text-xs font-extrabold tracking-widest text-dj-ember uppercase mt-0.5">Cevichería · Anticuchería</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2.5">
-                <button onclick="toggleCartDrawer()" class="relative bg-gradient-to-r from-djavys-red to-red-700 hover:from-red-600 hover:to-red-800 text-white px-4 sm:px-5 py-2.5 rounded-xl font-extrabold text-sm flex items-center gap-2.5 shadow-xl shadow-djavys-red/30 transition-all hover:scale-105 active:scale-95">
-                    <i class="fa-solid fa-fire text-amber-300 text-base animate-pulse"></i>
-                    <span class="hidden sm:inline font-heading uppercase tracking-wide">Mi Pedido</span>
-                    <span id="cart-badge" class="bg-white text-djavys-red text-xs w-6 h-6 rounded-full flex items-center justify-center font-black shadow-md">
-                        0
-                    </span>
-                </button>
-            </div>
+            <button @click="isCartOpen = true"
+                    class="relative p-3 bg-dj-teal/10 hover:bg-dj-teal/20 text-dj-teal rounded-full transition-all flex items-center justify-center">
+                <i class="fa-solid fa-bowl-food text-xl"></i>
+                <span x-show="getCartItemsCount() > 0"
+                      class="absolute -top-1 -right-1 bg-dj-ember text-white font-extrabold text-[10px] h-5 w-5 rounded-full flex items-center justify-center animate-bounce shadow-md"
+                      x-text="getCartItemsCount()"></span>
+            </button>
         </div>
     </header>
 
-    <!-- Closed Store Alert Banner -->
-    <div id="closed-banner" class="hidden bg-gradient-to-r from-red-900 via-red-800 to-red-900 border-b border-red-600 text-white px-4 py-3 text-center text-xs sm:text-sm font-bold shadow-xl">
-        <div class="max-w-5xl mx-auto flex items-center justify-center gap-2.5">
-            <i class="fa-solid fa-lock text-amber-300 text-xl animate-bounce"></i>
-            <span><strong>COCINA TEMPORALMENTE CERRADA:</strong> Estamos fuera de horario. Revisa nuestros horarios o activa el Modo Testeo para explorar el menú.</span>
+    <!-- BARRA DE ESTADO -->
+    <div class="bg-dj-teal text-white py-2.5 px-4 text-xs">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-dj-teal">
+                    <span :class="isOpen ? 'bg-emerald-500' : 'bg-rose-500'" class="w-1.5 h-1.5 rounded-full mr-1.5 animate-pulse"></span>
+                    <span x-text="['TEST', 'TESTING', 'PRUEBAS', 'SIEMPRE'].includes(activeSchedule ? activeSchedule.toUpperCase() : '') ? 'Modo Pruebas Activo' : (isOpen ? 'Abierto en Piura' : 'Cerrado en Piura')"></span>
+                </span>
+                <span class="font-semibold">
+                    <i class="fa-solid fa-clock mr-1"></i>
+                    L-V 4:00pm–12:00am · S-D 11:00am–12:00am
+                </span>
+            </div>
+            <div class="flex items-center gap-3 font-medium text-[11px]">
+                <span><i class="fa-solid fa-motorcycle text-dj-ember mr-1"></i> Entrega estimada: <span x-text="deliveryTimeEstimate"></span></span>
+            </div>
         </div>
     </div>
 
-    <!-- Hero Showcase & Quick Specs -->
-    <section class="relative bg-gradient-to-b from-[#F3EFEA] via-[#FAF8F5] to-[#FAF8F5] border-b border-stone-200/80 py-8 px-4 overflow-hidden">
-        <div class="max-w-7xl mx-auto relative z-10 space-y-4">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6 bg-white border border-stone-200/90 p-6 sm:p-8 rounded-3xl shadow-xl shadow-stone-200/50">
-                <div class="space-y-2 text-center md:text-left">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-djavys-red/10 text-djavys-red rounded-full text-xs font-black tracking-widest uppercase border border-djavys-red/20">
-                        <i class="fa-solid fa-fire text-djavys-orange"></i> Sabor 100% Parrillero
-                    </div>
-                    <h2 class="text-2xl sm:text-4xl font-black text-stone-900 font-heading tracking-tight leading-tight">
-                        Arma tu Pedido Directo a <span class="text-transparent bg-clip-text bg-gradient-to-r from-djavys-red via-djavys-orange to-djavys-gold">WhatsApp</span>
-                    </h2>
-                    <p class="text-xs sm:text-sm text-stone-600 max-w-2xl font-medium">
-                        Elige tus hamburguesas, salchipapas o mostros. El sistema detecta tu ubicación GPS, asigna tu pedido a la <strong class="text-stone-900">sede más cercana</strong> y te cotiza el delivery al instante.
-                    </p>
-                </div>
-
-                <div class="flex items-center gap-4 bg-stone-900 p-4 sm:p-5 rounded-2xl border border-stone-800 text-white shrink-0 shadow-lg">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-djavys-red to-djavys-orange flex items-center justify-center text-white text-2xl shadow-md shadow-djavys-red/30">
-                        <i class="fa-solid fa-motorcycle"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs font-bold text-stone-400 uppercase tracking-wider">Tiempo de Entrega</div>
-                        <div class="text-lg font-black text-white font-heading">30 – 50 Minutos</div>
-                        <div class="text-[11px] text-emerald-400 font-semibold"><i class="fa-solid fa-bolt mr-1"></i>Envíos en Piura, Miraflores & Castilla</div>
-                    </div>
+    <!-- HERO -->
+    <div class="max-w-6xl mx-auto px-4 mt-6">
+        <div class="relative bg-gradient-to-br from-[#F7F1E4] to-[#EFE4C9] rounded-3xl p-6 md:p-10 border border-dj-teal/10 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
+            <div class="space-y-4 text-center md:text-left z-10 max-w-xl">
+                <span class="bg-dj-ember/10 text-dj-ember text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full">
+                    🔥🐟 Sabor piurano al carbón y al limón
+                </span>
+                <h2 class="font-display font-bold text-4xl md:text-5xl text-dj-charcoal leading-tight">
+                    Ceviche fresco. <br class="hidden md:inline"> Anticuchos al carbón.
+                </h2>
+                <p class="text-xs md:text-sm text-dj-charcoal/70 leading-relaxed font-semibold">
+                    Marinado al momento y parrilla encendida en nuestras 4 sedes de Piura. Pide en un par de minutos.
+                </p>
+                <div class="pt-2">
+                    <button @click="scrollToMenu('ceviches')" class="px-6 py-3 bg-dj-teal hover:bg-dj-tealDark text-white font-extrabold text-xs rounded-xl transition shadow-md">
+                        Ver la carta
+                    </button>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- Sticky Search & Category Navigation Bar -->
-    <section class="sticky top-[73px] z-30 bg-[#FAF8F5]/95 backdrop-blur-xl border-b border-stone-200 py-3.5 px-4 shadow-sm">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-            <div class="relative w-full md:w-80 shrink-0">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-xs"></i>
-                <input id="search-input" 
-                       type="text" 
-                       oninput="onSearchInput(this.value)" 
-                       placeholder="Buscar hamburguesas, salchipapas..." 
-                       class="w-full pl-9 pr-9 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-djavys-red focus:ring-1 focus:ring-djavys-red transition duration-200 shadow-sm">
-                <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700">
-                    <i class="fa-solid fa-xmark text-xs"></i>
-                </button>
+            <div class="w-44 h-44 md:w-56 md:h-56 rounded-full overflow-hidden shadow-xl border-4 border-dj-ember -rotate-3 hover:rotate-0 transition-all duration-300">
+                <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80" alt="Ceviche DJAVY" class="w-full h-full object-cover">
             </div>
-
-            <div id="category-tabs" class="flex items-center gap-2 overflow-x-auto w-full pb-1 md:pb-0 no-scrollbar"></div>
         </div>
-    </section>
+    </div>
 
-    <!-- Catalog Display Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
-        <div id="catalog-container" class="space-y-10"></div>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="max-w-6xl mx-auto px-4 py-8 md:py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
 
-        <div id="empty-state" class="hidden text-center py-20 px-4">
-            <div class="w-20 h-20 bg-white border border-stone-200 rounded-3xl flex items-center justify-center mx-auto mb-4 text-stone-400 text-3xl shadow-md">
-                <i class="fa-solid fa-burger"></i>
+            <aside class="lg:col-span-1 sticky top-[84px] z-30 bg-dj-sand lg:bg-transparent -mx-4 px-4 py-2 lg:p-0 lg:m-0 border-b border-dj-teal/10 lg:border-none space-y-3">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-dj-charcoal/30 text-xs"></i>
+                    <input type="text" x-model="searchTerm" placeholder="Buscar en la carta..."
+                           class="w-full text-xs py-2.5 pl-9 pr-3 rounded-xl border border-dj-teal/20 focus:border-dj-teal outline-none bg-white font-semibold text-dj-charcoal">
+                </div>
+
+                <h3 class="hidden lg:block font-display font-semibold text-lg text-dj-teal px-1">Nuestra Carta</h3>
+                <div class="flex lg:flex-col gap-2 overflow-x-auto no-scrollbar lg:overflow-visible pb-2 lg:pb-0">
+                    <button @click="selectedCategory = 'todas'"
+                            class="px-5 py-3 rounded-xl text-xs md:text-sm font-bold whitespace-nowrap tracking-wide transition-all duration-200 text-left w-auto lg:w-full flex items-center justify-between gap-3"
+                            :class="selectedCategory === 'todas' ? 'bg-dj-teal text-white shadow-md' : 'bg-white hover:bg-dj-teal/5 text-dj-charcoal border border-dj-teal/10'">
+                        <span>🍽️ Todo el Menú</span>
+                        <span class="hidden lg:inline text-[10px] bg-dj-charcoal/5 text-dj-charcoal px-2 py-0.5 rounded-full" x-text="products.filter(p => p.category !== 'cremas').length"></span>
+                    </button>
+
+                    <template x-for="cat in categories" :key="cat.id">
+                        <button @click="selectedCategory = cat.id"
+                                class="px-5 py-3 rounded-xl text-xs md:text-sm font-bold whitespace-nowrap tracking-wide transition-all duration-200 text-left w-auto lg:w-full flex items-center justify-between gap-3"
+                                :class="selectedCategory === cat.id ? 'bg-dj-teal text-white shadow-md' : 'bg-white hover:bg-dj-teal/5 text-dj-charcoal border border-dj-teal/10'">
+                            <span x-text="cat.name"></span>
+                            <span class="hidden lg:inline text-[10px] bg-dj-charcoal/5 text-dj-charcoal px-2 py-0.5 rounded-full" x-text="getProductsCountInCategory(cat.id)"></span>
+                        </button>
+                    </template>
+                </div>
+            </aside>
+
+            <div class="lg:col-span-3 space-y-10">
+                <template x-for="cat in categories" :key="cat.id">
+                    <div x-show="shouldShowCategory(cat.id)" class="space-y-4" :id="`sec-${cat.id}`">
+                        <h3 class="font-display font-semibold text-xl md:text-2xl text-dj-teal border-b-2 border-dj-ember pb-2 flex justify-between items-center">
+                            <span x-text="cat.name"></span>
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <template x-for="product in getFilteredProducts(cat.id)" :key="product.id">
+                                <div @click="openProductDetail(product)"
+                                     class="bg-white rounded-2xl border border-dj-teal/10 overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex items-stretch min-h-[140px] cursor-pointer hover:border-dj-ember/40">
+
+                                    <div class="w-28 sm:w-36 flex-shrink-0 relative overflow-hidden bg-dj-sand">
+                                        <img :src="product.image || 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80'"
+                                             :alt="product.name" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                                             onerror="this.src='https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80'">
+                                    </div>
+
+                                    <div class="p-4 flex flex-col justify-between flex-1 space-y-2">
+                                        <div>
+                                            <h4 class="font-bold text-sm md:text-base text-dj-charcoal" x-text="product.name"></h4>
+                                            <p class="text-[11px] md:text-xs text-dj-charcoal/70 line-clamp-2 md:line-clamp-3 leading-relaxed mt-1" x-text="product.description"></p>
+                                        </div>
+
+                                        <div class="flex items-center justify-between pt-2 border-t border-dj-sand">
+                                            <span class="font-extrabold text-xs md:text-sm text-dj-ember" x-text="`S/ ${product.price.toFixed(2)}`"></span>
+                                            <button @click.stop="openProductDetail(product)"
+                                                    class="px-4 py-1.5 bg-dj-teal hover:bg-dj-tealDark text-white text-xs font-bold rounded-xl transition shadow-xs hover:scale-102 flex items-center gap-1">
+                                                <i class="fa-solid fa-plus text-[9px]"></i>
+                                                <span>Agregar</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
             </div>
-            <h3 class="text-xl font-bold text-stone-800 font-heading">No encontramos lo que buscas</h3>
-            <p class="text-xs text-stone-500 mt-1 max-w-sm mx-auto">Prueba buscando con otro nombre o selecciona una categoría diferente.</p>
-            <button onclick="clearSearch()" class="mt-5 px-5 py-2.5 bg-djavys-red text-white rounded-xl text-xs font-black font-heading hover:bg-djavys-redhover transition active:scale-95 shadow-lg shadow-djavys-red/30">
-                <i class="fa-solid fa-arrows-rotate mr-1.5"></i>Ver Todo el Menú
-            </button>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-stone-900 border-t border-stone-800 text-stone-400 py-8 px-4 text-xs">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
-            <div class="space-y-1">
-                <p class="font-black text-white text-base font-heading tracking-wide">D'JAVYS © 2026</p>
-                <p class="text-stone-400 text-xs">El mejor sabor parrillero y callejero de Piura, Miraflores y Castilla.</p>
-            </div>
-            <div class="flex flex-wrap items-center justify-center md:justify-end gap-6 text-stone-300 font-semibold">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-qrcode text-djavys-purple"></i> Yape / Plin: 968 192 632</span>
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-clock text-amber-400"></i> Horario oficial L-V 4pm-12am | S-D 11am-12am</span>
-            </div>
-        </div>
-    </footer>
+    <!-- MODAL DE DETALLE -->
+    <div x-show="isDetailOpen" class="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 sm:p-6" style="display: none;"
+         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
-    <!-- Floating Mobile Bottom Sticky Cart Bar -->
-    <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 border-t border-stone-200 p-3 md:hidden backdrop-blur-xl shadow-2xl">
-        <div class="flex items-center justify-between gap-3 max-w-md mx-auto">
-            <div class="flex flex-col">
-                <span class="text-[10px] uppercase font-black text-stone-400 tracking-wider">Tu Pedido</span>
-                <span id="mobile-bar-total" class="text-lg font-black text-djavys-gold font-heading leading-tight">S/ 0.00</span>
-            </div>
-            
-            <button onclick="toggleCartDrawer()" class="flex-1 py-3 bg-gradient-to-r from-djavys-red to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-xl font-black text-xs font-heading flex items-center justify-center gap-2 shadow-xl shadow-djavys-red/30 active:scale-95 transition">
-                <i class="fa-solid fa-bag-shopping text-sm"></i>
-                <span>VER MI PEDIDO</span>
-                <span id="mobile-cart-badge" class="bg-white text-djavys-red text-[11px] w-5 h-5 rounded-full flex items-center justify-center font-black ml-1 shadow-sm">
-                    0
-                </span>
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-xs transition-opacity" @click="isDetailOpen = false"></div>
+
+        <div class="bg-white rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl border border-dj-teal/15 relative z-10 flex flex-col max-h-[85vh] sm:max-h-[90vh] transform transition-all"
+             x-show="isDetailOpen"
+             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-4 scale-95">
+
+            <button @click="isDetailOpen = false" class="absolute top-4 right-4 z-20 bg-black/60 hover:bg-dj-ember text-white w-9 h-9 rounded-full flex items-center justify-center transition shadow-md">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-        </div>
-    </div>
 
-    <!-- Product Detail Modal -->
-    <div id="product-modal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white border border-stone-200 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative my-6 max-h-[90vh] flex flex-col text-stone-800">
-            <div class="relative h-52 sm:h-60 bg-stone-100 shrink-0">
-                <img id="modal-img" src="" alt="" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent"></div>
-                <button onclick="closeProductModal()" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-stone-900/80 text-white flex items-center justify-center hover:bg-djavys-red transition duration-200 shadow-md">
-                    <i class="fa-solid fa-xmark text-base"></i>
-                </button>
-
-                <div class="absolute bottom-3 left-4 right-4 space-y-1">
-                    <span id="modal-category" class="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-md food-badge-red text-white shadow-sm"></span>
-                    <h3 id="modal-title" class="text-2xl font-black text-stone-900 font-heading leading-tight"></h3>
-                    <p id="modal-price" class="text-xl font-black text-djavys-gold font-heading"></p>
+            <div class="h-44 sm:h-56 w-full relative overflow-hidden bg-dj-sand flex-shrink-0">
+                <img :src="selectedProductForDetail?.image || 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80'"
+                     :alt="selectedProductForDetail?.name" class="w-full h-full object-cover"
+                     onerror="this.src='https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80'">
+                <div class="absolute bottom-4 left-4">
+                    <span class="bg-dj-teal text-white text-[10px] font-extrabold uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-md border-2 border-dj-ember"
+                          x-text="selectedProductForDetail ? categories.find(c => c.id === selectedProductForDetail.category)?.name : ''"></span>
                 </div>
             </div>
 
-            <div class="p-5 overflow-y-auto space-y-5 flex-1">
-                <p id="modal-description" class="text-xs sm:text-sm text-stone-600 leading-relaxed font-medium"></p>
+            <div class="p-6 space-y-4 flex-1 overflow-y-auto">
+                <h3 class="font-display font-bold text-2xl text-dj-charcoal tracking-wide" x-text="selectedProductForDetail?.name"></h3>
+                <p class="text-xs sm:text-sm text-dj-charcoal/80 font-semibold leading-relaxed" x-text="selectedProductForDetail?.description"></p>
 
-                <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200 flex items-center justify-between">
+                <div class="flex items-center justify-between bg-dj-sand p-3 rounded-xl border border-dj-teal/10">
+                    <span class="text-xs font-bold text-dj-charcoal">¿Cuántas porciones deseas?</span>
+                    <div class="flex items-center gap-3 bg-white border border-dj-teal/20 rounded-xl px-2.5 py-1">
+                        <button type="button" @click="decreaseModalQty()" class="text-dj-teal hover:text-dj-charcoal font-black px-1 text-sm"><i class="fa-solid fa-minus"></i></button>
+                        <span class="text-sm font-black text-dj-charcoal min-w-[20px] text-center" x-text="modalQuantity"></span>
+                        <button type="button" @click="increaseModalQty()" class="text-dj-teal hover:text-dj-charcoal font-black px-1 text-sm"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <template x-if="selectedProductForDetail && isCustomizable(selectedProductForDetail.category)">
+                    <div class="space-y-4 border-t border-dj-sand pt-4">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-dj-ember">🌶️ Elige tus salsas para cada porción:</h4>
+                        <template x-for="(selection, index) in detailCreamsSelections" :key="index">
+                            <div class="bg-dj-sand p-3 rounded-xl border border-dj-teal/10 space-y-2">
+                                <p class="text-xs font-black text-dj-charcoal" x-text="`Para ${selectedProductForDetail.name} #${index + 1}:`"></p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <template x-for="crema in getCremas()" :key="crema.id">
+                                        <label class="flex items-center gap-2 bg-white p-2 rounded-lg border border-dj-teal/5 cursor-pointer select-none">
+                                            <input type="checkbox" :checked="selection.includes(crema.name)" @change="toggleCrema(index, crema.name)" class="rounded text-dj-teal focus:ring-dj-teal w-4 h-4">
+                                            <span class="text-xs font-semibold text-dj-charcoal" x-text="crema.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <div class="flex items-center justify-between pt-4 border-t border-dj-sand">
                     <div>
-                        <span class="block text-xs font-bold text-stone-900 font-heading">¿Cuántas porciones deseas?</span>
-                        <span class="text-[11px] text-stone-500">Selecciona la cantidad</span>
+                        <span class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Precio Unitario</span>
+                        <span class="font-black text-xl text-dj-ember" x-text="`S/ ${selectedProductForDetail?.price.toFixed(2)}`"></span>
                     </div>
-                    <div class="flex items-center gap-3 bg-white px-3 py-1.5 rounded-xl border border-stone-200 shadow-sm">
-                        <button onclick="adjustModalQuantity(-1)" class="text-stone-600 hover:text-djavys-red font-bold px-2 text-lg transition">-</button>
-                        <span id="modal-qty" class="font-black text-base text-stone-900 w-5 text-center font-heading">1</span>
-                        <button onclick="adjustModalQuantity(1)" class="text-stone-600 hover:text-emerald-600 font-bold px-2 text-lg transition">+</button>
-                    </div>
+                    <button @click="addToCartWithQty(selectedProductForDetail, modalQuantity); isDetailOpen = false"
+                            class="px-6 py-3 bg-dj-teal hover:bg-dj-tealDark text-white text-xs font-extrabold rounded-xl transition shadow-md flex items-center gap-2 transform active:scale-95">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>Confirmar e Incluir</span>
+                    </button>
                 </div>
-
-                <div id="sauces-container-wrapper" class="space-y-3.5 hidden">
-                    <div class="border-t border-stone-200 pt-4">
-                        <div class="flex items-center gap-2 text-djavys-gold font-heading font-extrabold text-xs uppercase tracking-wider">
-                            <i class="fa-solid fa-droplet text-djavys-orange text-sm"></i>
-                            <span>Selección de Cremas por Porción</span>
-                        </div>
-                        <p class="text-[11px] text-stone-500 mt-1">Elige las cremas independientes para cada unidad:</p>
-                    </div>
-
-                    <div id="sauces-units-list" class="space-y-3.5"></div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-stone-700 mb-1.5 font-heading">
-                        <i class="fa-regular fa-comment-dots text-djavys-red mr-1.5"></i>Instrucciones especiales para cocina (Opcional):
-                    </label>
-                    <textarea id="modal-notes" rows="2" placeholder="Ej: Sin cebolla, papas bien fritas, crema aparte..." 
-                              class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-djavys-red focus:bg-white resize-none"></textarea>
-                </div>
-            </div>
-
-            <div class="p-4 bg-stone-50 border-t border-stone-200 shrink-0">
-                <button id="modal-add-btn" onclick="addModalProductToCart()" class="w-full py-3.5 bg-gradient-to-r from-djavys-red to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-xl font-black font-heading text-sm flex items-center justify-center gap-2 shadow-xl shadow-djavys-red/30 transition active:scale-98">
-                    <i class="fa-solid fa-cart-plus text-base"></i>
-                    <span id="modal-btn-text">Agregar al Carrito • S/ 0.00</span>
-                </button>
             </div>
         </div>
     </div>
 
-    <!-- Cart Drawer -->
-    <div id="cart-drawer-overlay" onclick="toggleCartDrawer()" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0"></div>
+    <!-- CAJÓN DE CARRITO Y CHECKOUT -->
+    <div x-show="isCartOpen" class="fixed inset-0 z-50 overflow-hidden" style="display: none;">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="isCartOpen = false"></div>
 
-    <aside id="cart-drawer" class="fixed top-0 right-0 z-50 h-full w-full sm:w-[480px] bg-white border-l border-stone-200 shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out">
-        <div class="p-4 bg-stone-900 text-white border-b border-stone-800 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-djavys-red/20 border border-djavys-red/40 text-djavys-red flex items-center justify-center text-lg font-bold">
-                    <i class="fa-solid fa-bag-shopping"></i>
-                </div>
-                <div>
-                    <h2 id="drawer-title" class="text-lg font-black text-white font-heading">Tu Pedido D'JAVYS</h2>
-                    <p id="drawer-step-subtitle" class="text-[11px] text-stone-300 font-semibold">Paso 1: Revisa tus productos y cremas</p>
-                </div>
-            </div>
+        <div class="absolute inset-y-0 right-0 max-w-full flex">
+            <div class="w-screen max-w-lg bg-white flex flex-col h-full shadow-2xl border-l border-dj-teal/10"
+                 x-transition:enter="transform transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transform transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
 
-            <button onclick="toggleCartDrawer()" class="w-9 h-9 rounded-full bg-stone-800 text-stone-300 hover:text-white hover:bg-djavys-red flex items-center justify-center transition">
-                <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
-        </div>
-
-        <div id="cart-step-1" class="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-50/50">
-            <div id="cart-items-container" class="space-y-3"></div>
-
-            <div id="empty-cart-view" class="hidden text-center py-20 px-4">
-                <div class="w-20 h-20 bg-white border border-stone-200 rounded-3xl flex items-center justify-center mx-auto mb-3 text-stone-400 text-3xl shadow-inner">
-                    <i class="fa-solid fa-cart-arrow-down"></i>
-                </div>
-                <h4 class="text-base font-bold text-stone-800 font-heading">Tu pedido está vacío</h4>
-                <p class="text-xs text-stone-500 mt-1 max-w-xs mx-auto">Agrega tus hamburguesas o salchipapas favoritas para continuar.</p>
-            </div>
-        </div>
-
-        <div id="cart-step-2" class="hidden flex-1 overflow-y-auto p-4 space-y-5 bg-stone-50/50">
-            <div class="space-y-3 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
-                <h3 class="text-xs font-black text-djavys-red font-heading uppercase tracking-widest flex items-center gap-2">
-                    <i class="fa-solid fa-user-gear"></i> 1. Datos del Cliente
-                </h3>
-
-                <div>
-                    <label class="block text-[11px] font-bold text-stone-700 mb-1">Nombre Completo *</label>
-                    <input id="cust-name" type="text" placeholder="Ej: Juan Pérez" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-djavys-red focus:bg-white">
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-bold text-stone-700 mb-1">Teléfono Celular (9 dígitos) *</label>
-                    <input id="cust-phone" type="tel" maxlength="9" placeholder="Ej: 987654321" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-djavys-red focus:bg-white">
-                </div>
-            </div>
-
-            <div class="space-y-3.5 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
-                <h3 class="text-xs font-black text-djavys-red font-heading uppercase tracking-widest flex items-center gap-2">
-                    <i class="fa-solid fa-truck-fast"></i> 2. Modalidad de Entrega
-                </h3>
-
-                <div class="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-xl border border-stone-200 text-xs">
-                    <button id="btn-type-delivery" onclick="setDeliveryType('delivery')" class="py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition bg-djavys-red text-white shadow-md">
-                        <i class="fa-solid fa-motorcycle"></i> Delivery
-                    </button>
-                    <button id="btn-type-pickup" onclick="setDeliveryType('pickup')" class="py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition text-stone-600 hover:text-stone-900">
-                        <i class="fa-solid fa-store"></i> Recojo en Local
-                    </button>
-                </div>
-
-                <div id="delivery-fields" class="space-y-3.5">
-                    <div id="auto-sede-badge-container" class="bg-stone-50 p-3.5 rounded-xl border border-stone-200 text-xs space-y-1">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-black uppercase text-djavys-gold tracking-wider flex items-center gap-1.5">
-                                <i class="fa-solid fa-compass animate-spin"></i> Asignación de Sede por Cercanía
-                            </span>
-                            <span id="sede-distance-pill" class="bg-djavys-red/10 text-djavys-red text-[10px] font-black px-2 py-0.5 rounded-md border border-djavys-red/20">
-                                -- km
-                            </span>
-                        </div>
-                        <p id="assigned-sede-title" class="font-black text-stone-900 text-xs font-heading">
-                            Sede Cañaveral (Av. Progreso - Castilla)
-                        </p>
-                        <p id="assigned-sede-phone" class="text-[11px] text-stone-600">
-                            Número WhatsApp de atención: <strong class="text-emerald-700">906903444</strong>
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-stone-700 mb-1">Dirección Exacta de Entrega *</label>
-                        <div class="flex gap-2">
-                            <input id="cust-address" type="text" placeholder="Ej: Av. Progreso 450, Castilla" class="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-djavys-red focus:bg-white">
-                            <button onclick="searchAddressOnMap()" class="px-3.5 bg-stone-800 hover:bg-stone-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition shadow-sm">
-                                <i class="fa-solid fa-magnifying-glass-location text-djavys-gold"></i> Buscar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-stone-700 mb-1">Referencia para el repartidor</label>
-                        <input id="cust-reference" type="text" placeholder="Ej: Portón color negro, frente al parque" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-djavys-red focus:bg-white">
-                    </div>
-
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <label class="text-[11px] font-bold text-stone-700">Ajusta tu Marcador GPS en el Mapa</label>
-                            <button onclick="locateUserGPS()" class="text-[11px] text-djavys-red font-bold hover:underline flex items-center gap-1">
-                                <i class="fa-solid fa-crosshairs text-xs"></i> Usar mi GPS
-                            </button>
-                        </div>
-                        
-                        <div id="map-container" class="rounded-2xl overflow-hidden border border-stone-200 h-52 relative shadow-inner bg-stone-100">
-                            <div id="leaflet-map" class="w-full h-full"></div>
-                        </div>
-
-                        <div id="distance-info-badge" class="bg-stone-50 p-3 rounded-xl border border-stone-200 text-xs flex items-center justify-between">
-                            <span class="text-stone-600">Distancia a la sede: <strong id="calc-distance" class="text-stone-900 font-heading">-- km</strong></span>
-                            <span id="calc-fee-badge" class="font-extrabold text-djavys-gold font-heading">Tarifa Delivery: S/ 0.00</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="pickup-fields" class="hidden space-y-3">
-                    <div>
-                        <label class="block text-[11px] font-bold text-stone-700 mb-1">Selecciona la Sede para Recojo *</label>
-                        <select id="pickup-branch" onchange="updatePickupBranchDetails()" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-djavys-red font-medium">
-                            <option value="cañaveral">📍 Sede Cañaveral (Av. Progreso / Castilla) - Tel: 906903444</option>
-                            <option value="country">📍 Sede Country (Miraflores C.C.) - Tel: 903133226</option>
-                            <option value="san_jose">📍 Sede San José (Av. César Vallejo 103 - San José) - Tel: 981083311</option>
-                        </select>
-                    </div>
-
-                    <div class="bg-stone-50 p-3.5 rounded-xl border border-stone-200 space-y-2 text-xs">
-                        <p id="pickup-address-text" class="text-stone-900 font-bold font-heading">📍 Av. Progreso - Castilla</p>
-                        <p class="text-[11px] text-stone-500">Coordenadas fijas: <span class="text-stone-800 font-semibold">5°10'08.7"S 80°37'58.6"W</span></p>
-                        <a id="pickup-gmaps-link" href="https://maps.google.com/?q=-5.1983,-80.6212" target="_blank" class="inline-flex items-center gap-2 text-xs text-djavys-red font-bold hover:underline pt-1">
-                            <i class="fa-solid fa-map-location-dot"></i> Abrir Ruta en Google Maps
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-3 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
-                <h3 class="text-xs font-black text-djavys-red font-heading uppercase tracking-widest flex items-center gap-2">
-                    <i class="fa-solid fa-credit-card"></i> 3. Método de Pago
-                </h3>
-
-                <div class="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-xl border border-stone-200 text-xs">
-                    <button id="btn-pay-yape" onclick="setPaymentMethod('yape')" class="py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition bg-djavys-purple text-white shadow-md">
-                        <i class="fa-solid fa-qrcode"></i> Yape / Plin
-                    </button>
-                    <button id="btn-pay-cash" onclick="setPaymentMethod('cash')" class="py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition text-stone-600 hover:text-stone-900">
-                        <i class="fa-solid fa-money-bill-wave"></i> Efectivo
-                    </button>
-                </div>
-
-                <div id="yape-info-box" class="bg-purple-50 border border-purple-200 p-4 rounded-2xl text-xs space-y-2.5">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] uppercase font-bold text-purple-700 tracking-wider block">Titular de Cuenta</span>
-                            <span class="font-black text-purple-950 text-sm font-heading">Javier Ulloque</span>
-                        </div>
-                        <span class="px-2.5 py-0.5 bg-djavys-purple text-white rounded-md font-black text-[10px]">OFICIAL D'JAVYS</span>
-                    </div>
-
-                    <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-purple-200 shadow-sm">
-                        <span id="yape-number-text" class="font-mono font-black text-purple-900 text-base tracking-widest">968192632</span>
-                        <button onclick="copyYapeNumber()" class="px-3 py-1.5 bg-djavys-purple hover:bg-purple-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm">
-                            <i class="fa-solid fa-copy"></i> Copiar
+                <div class="p-4 sm:p-5 bg-dj-teal text-white flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center gap-2">
+                        <button x-show="currentStep === 'checkout'" @click="currentStep = 'cart'" class="text-white hover:text-dj-ember mr-1 text-xs flex items-center gap-1 bg-white/10 px-2.5 py-1.5 rounded-lg transition font-extrabold">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i> Volver
                         </button>
+                        <div class="flex items-center gap-1.5" x-show="currentStep === 'cart'">
+                            <i class="fa-solid fa-bowl-food text-dj-ember text-lg sm:text-xl"></i>
+                            <h2 class="font-display font-semibold text-base sm:text-lg tracking-wide">Tu Pedido DJAVY</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5" x-show="currentStep === 'checkout'">
+                            <h2 class="font-display font-semibold text-base sm:text-lg tracking-wide">Finalizar Pedido</h2>
+                        </div>
                     </div>
-                    <p class="text-[10px] text-purple-800 italic">Adjunta la captura del pago al enviar tu mensaje por WhatsApp.</p>
+                    <button @click="isCartOpen = false" class="text-white hover:text-dj-ember text-lg sm:text-xl p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
 
-                <div id="cash-info-box" class="hidden bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-3 text-xs">
-                    <div>
-                        <label class="block text-[11px] font-bold text-stone-700 mb-1">¿Con cuánto billete/monto pagarás?</label>
-                        <div class="relative">
-                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 font-bold">S/</span>
-                            <input id="cash-amount" type="number" step="0.50" oninput="calculateChange()" placeholder="Ej: 50.00" class="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-djavys-red">
+                <div x-show="errorMessage" class="bg-rose-50 text-rose-800 text-xs px-5 py-3 border-b border-rose-200 flex items-center justify-between flex-shrink-0">
+                    <span x-text="errorMessage" class="font-semibold"></span>
+                    <button @click="errorMessage = ''" class="text-rose-500 font-bold px-2">X</button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 sm:space-y-6">
+
+                    <!-- VISTA 1: CARRITO -->
+                    <div x-show="currentStep === 'cart'" class="space-y-4">
+                        <div x-show="!isOpen" class="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-3 text-xs font-semibold">
+                            <p class="flex items-center gap-1.5 text-rose-800 font-extrabold uppercase tracking-wider text-[10px]">
+                                <i class="fa-solid fa-circle-exclamation"></i> Cocina Cerrada en este momento
+                            </p>
+                            <p class="text-rose-950/80 mt-0.5">Estamos fuera de nuestro horario de atención. No es posible tramitar la compra hasta la apertura.</p>
+                        </div>
+
+                        <div x-show="cart.length === 0" class="text-center py-12 space-y-3">
+                            <i class="fa-solid fa-shrimp text-5xl text-dj-ember/40 animate-pulse"></i>
+                            <p class="text-xs font-bold text-dj-charcoal/80">¿Aún no has agregado nada de la carta?</p>
+                        </div>
+
+                        <div x-show="cart.length > 0" class="divide-y divide-dj-sand">
+                            <template x-for="item in cart" :key="item.id">
+                                <div class="py-4 flex items-center justify-between gap-4">
+                                    <div class="w-12 h-12 rounded-xl overflow-hidden bg-dj-sand border border-dj-teal/10 flex-shrink-0">
+                                        <img :src="item.image || 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80'" alt="" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-xs md:text-sm text-dj-charcoal" x-text="item.name"></h4>
+                                        <template x-if="item.creams && item.creams.length > 0">
+                                            <p class="text-[10px] text-dj-ember font-semibold leading-tight mt-1">
+                                                Salsas: <span class="text-dj-charcoal/80" x-text="item.creams.join(', ')"></span>
+                                            </p>
+                                        </template>
+                                        <p class="text-[11px] font-extrabold text-dj-charcoal/70 mt-0.5" x-text="`S/ ${item.price.toFixed(2)} c/u`"></p>
+                                    </div>
+                                    <div class="flex items-center gap-2 border border-dj-teal/20 rounded-xl px-2 py-1 bg-dj-sand">
+                                        <button @click="decreaseQty(item)" class="text-dj-teal hover:text-dj-charcoal px-1.5 py-0.5 text-xs font-bold"><i class="fa-solid fa-minus"></i></button>
+                                        <span class="text-xs font-bold text-dj-charcoal px-1" x-text="item.quantity"></span>
+                                        <button @click="increaseQty(item)" class="text-dj-teal hover:text-dj-charcoal px-1.5 py-0.5 text-xs font-bold"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                    <div class="text-right min-w-[70px]">
+                                        <span class="font-extrabold text-xs md:text-sm text-dj-charcoal" x-text="`S/ ${(item.price * item.quantity).toFixed(2)}`"></span>
+                                        <button @click="removeItem(item)" class="block text-rose-400 hover:text-rose-600 text-xs mt-1 ml-auto p-1"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
-                    <div class="bg-white p-3 rounded-xl border border-stone-200 flex items-center justify-between shadow-sm">
-                        <span class="text-stone-600 font-medium">Vuelto a llevar por motorizado:</span>
-                        <span id="calc-change-text" class="font-black text-emerald-600 text-base font-heading">S/ 0.00</span>
-                    </div>
-
-                    <p id="cash-warning-msg" class="hidden text-[10px] font-bold text-djavys-red">
-                        ⚠️ El monto ingresado debe ser mayor o igual al total del pedido.
-                    </p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2.5 bg-white p-3 rounded-xl border border-stone-200 shadow-sm">
-                <input id="save-data-checkbox" type="checkbox" checked class="w-4 h-4 rounded border-stone-300 text-djavys-red focus:ring-djavys-red cursor-pointer">
-                <label for="save-data-checkbox" class="text-xs text-stone-700 cursor-pointer select-none font-medium">
-                    Guardar mis datos para mis próximos pedidos
-                </label>
-            </div>
-        </div>
-
-        <div class="p-4 bg-white border-t border-stone-200 shrink-0 space-y-3 shadow-lg">
-            <div class="space-y-1 text-xs">
-                <div class="flex justify-between text-stone-600 font-medium">
-                    <span>Subtotal del pedido:</span>
-                    <span id="summary-subtotal" class="font-bold text-stone-900 font-heading">S/ 0.00</span>
-                </div>
-                <div class="flex justify-between text-stone-600 font-medium">
-                    <span>Costo de envío (Delivery):</span>
-                    <span id="summary-delivery" class="font-bold text-stone-900 font-heading">S/ 0.00</span>
-                </div>
-                <div class="flex justify-between text-sm font-black text-stone-900 pt-2 border-t border-stone-200 font-heading">
-                    <span>TOTAL GENERAL:</span>
-                    <span id="summary-total" class="text-djavys-gold text-lg">S/ 0.00</span>
-                </div>
-            </div>
-
-            <div id="step-1-actions">
-                <button id="btn-proceed-checkout" onclick="goToStep2()" class="w-full py-3.5 bg-gradient-to-r from-djavys-red to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-xl font-black font-heading text-sm flex items-center justify-center gap-2 shadow-xl shadow-djavys-red/30 transition active:scale-98">
-                    <span>Continuar con la Compra</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
-
-            <div id="step-2-actions" class="hidden flex gap-2">
-                <button onclick="goToStep1()" class="px-4 py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-xs flex items-center justify-center transition border border-stone-200">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <button id="btn-submit-whatsapp" onclick="submitOrderToWhatsApp()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black font-heading text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-700/30 transition active:scale-98">
-                    <i class="fa-brands fa-whatsapp text-xl"></i>
-                    <span>Confirmar por WhatsApp</span>
-                </button>
-            </div>
-        </div>
-    </aside>
-
-    <div id="toast-container" class="fixed bottom-20 md:bottom-6 left-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-    <script>
-        const BRAND_CONFIG = {
-            name: "D'JAVYS",
-            tagline: "Hamburguesas, Salchipapas & Parrillas",
-            logo: "https://instagram.fpiu1-1.fna.fbcdn.net/v/t51.82787-19/533684047_18402408976119412_4409753760324661629_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDI0LmMyIn0&_nc_ht=instagram.fpiu1-1.fna.fbcdn.net&_nc_cat=104&_nc_oc=Q6cZ2gFxU3-By1qa8KxCclSzreZ9JeDiBtD8D7VMohwra1wsamM49_Y1KRbfHY3oYsBX8tQERSAjFcXTkIcgbYfX2fgx&_nc_ohc=v2nj_EAJ1KsQ7kNvwF5V7IG&_nc_gid=ggSR43IDOgvLyoADdVqujA&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AQDocUWX3C0QR1AqoZyKedqPw67-XJ4UOmCGnGXy1vU4kw&oe=6A65F0FE&_nc_sid=7a9f4b",
-            payment: {
-                yapeNumber: "968192632",
-                yapeHolder: "Javier Ulloque"
-            },
-            sedes: [
-                {
-                    id: "cañaveral",
-                    name: "Sede Cañaveral",
-                    address: "Av. Progreso / Castilla",
-                    phone: "906903444",
-                    lat: -5.1983,
-                    lng: -80.6212
-                },
-                {
-                    id: "country",
-                    name: "Sede Country",
-                    address: "Miraflores C.C.",
-                    phone: "903133226",
-                    lat: -5.1835,
-                    lng: -80.6258
-                },
-                {
-                    id: "san_jose",
-                    name: "Sede San José",
-                    address: "Av. César Vallejo 103 - San José",
-                    phone: "981083311",
-                    lat: -5.1921,
-                    lng: -80.6385
-                }
-            ],
-            deliveryRates: [
-                { maxDist: 1.0, fee: 3.0 },
-                { maxDist: 3.0, fee: 6.0 },
-                { maxDist: 6.0, fee: 9.0 },
-                { maxDist: 9.0, fee: 13.0 }
-            ],
-            availableSauces: [
-                "Mayonesa",
-                "Mostaza",
-                "Ketchup",
-                "Ají Parrillero",
-                "Crema de Aceituna",
-                "Tártara",
-                "Crema Golf",
-                "Chimichurri"
-            ]
-        };
-
-        const PRODUCT_CATALOG = [
-            {
-                id: "hamb-clasica",
-                name: "Hamburguesa Clásica Parrillera",
-                category: "Hamburguesas",
-                price: 13.50,
-                description: "Carne parrillera artesanal 150g, lechuga fresca, tomate, papas al hilo y cremas a elección.",
-                image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80",
-                badge: "Más Vendido",
-                allowsSauces: true
-            },
-            {
-                id: "hamb-royal",
-                name: "Hamburguesa Royal D'JAVYS",
-                category: "Hamburguesas",
-                price: 17.00,
-                description: "Carne 150g, queso cheddar fundido, huevo frito a la inglesa, jamón, lechuga y tomate.",
-                image: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=600&q=80",
-                badge: "Recomendado",
-                allowsSauces: true
-            },
-            {
-                id: "hamb-parrillera-doble",
-                name: "Doble Parrillera Cheesy",
-                category: "Hamburguesas",
-                price: 22.00,
-                description: "Doble carne parrillera (300g total), doble queso cheddar, tocino ahumado crocante y salsa BBQ.",
-                image: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80",
-                badge: "Especialidad",
-                allowsSauces: true
-            },
-            {
-                id: "salchi-clasica",
-                name: "Salchipapa Clásica Piurana",
-                category: "Salchipapas",
-                price: 14.00,
-                description: "Generosa porción de papas amarillas crujientes, abundante salchicha frankfurter de primera y cremas.",
-                image: "https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=600&q=80",
-                badge: "Favorito",
-                allowsSauces: true
-            },
-            {
-                id: "salchi-especial",
-                name: "Salchipapa Especial con Huevo y Queso",
-                category: "Salchipapas",
-                price: 18.00,
-                description: "Papas amarillas crocantes, doble salchicha frankfurter, huevo frito, queso mozzarella derretido.",
-                image: "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=600&q=80",
-                badge: "Generosa",
-                allowsSauces: true
-            },
-            {
-                id: "mostro-parrillero",
-                name: "El Mostro Parrillero D'JAVYS",
-                category: "Mostros & Parrillas",
-                price: 26.00,
-                description: "Base de salchipapa gigante + 1/4 de pollo a la parrilla jugoso o carne parrillera + ensalada fresca.",
-                image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80",
-                badge: "Plato Fuerte",
-                allowsSauces: true
-            },
-            {
-                id: "parrilla-mixta",
-                name: "Parrilla Mixta D'JAVYS",
-                category: "Mostros & Parrillas",
-                price: 32.00,
-                description: "Bife parrillero, chuleta de cerdo, chorizo artesanal, papas doradas y ensalada de la casa.",
-                image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80",
-                badge: "Premium",
-                allowsSauces: true
-            },
-            {
-                id: "bebida-inca-1l",
-                name: "Inca Kola 1 Litro (Retornable/Plástica)",
-                category: "Bebidas",
-                price: 8.00,
-                description: "Inca Kola helada para acompañar tu banquete parrillero.",
-                image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80",
-                badge: null,
-                allowsSauces: false
-            },
-            {
-                id: "bebida-chicha-personal",
-                name: "Chicha Morada Artesanal 500ml",
-                category: "Bebidas",
-                price: 6.00,
-                description: "Preparada con maíz morado piurano, fruta fresca, piña y clavo.",
-                image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80",
-                badge: "Artesanal",
-                allowsSauces: false
-            }
-        ];
-
-        let cartItems = [];
-        let activeCategoryFilter = "ALL";
-        let currentSearchQuery = "";
-        let operationMode = "TEST";
-        let isStoreOpen = true;
-        let deliveryType = "delivery";
-        let paymentMethod = "yape";
-        let assignedBranch = BRAND_CONFIG.sedes[0];
-        let currentGPSCoords = { lat: -5.1983, lng: -80.6212 };
-        let calculatedDeliveryFee = 3.0;
-        let calculatedDistanceKm = 0.5;
-        let leafletMap = null;
-        let leafletMarker = null;
-
-        let activeModalProduct = null;
-        let activeModalQty = 1;
-        let selectedSaucesByUnit = {};
-
-        function getStoreTimePeru() {
-            const now = new Date();
-            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-            return new Date(utc + (3600000 * -5));
-        }
-
-        function evaluateStoreStatus() {
-            const peruDate = getStoreTimePeru();
-            const dayOfWeek = peruDate.getDay(); 
-            const hours = peruDate.getHours();
-            const minutes = peruDate.getMinutes();
-            const totalMinutes = hours * 60 + minutes;
-
-            const timeStr = peruDate.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: true });
-            const timeDisplay = document.getElementById("store-status-time");
-            if (timeDisplay) timeDisplay.innerHTML = `<i class="fa-regular fa-clock text-djavys-gold mr-1"></i>Hora Perú: ${timeStr}`;
-
-            if (operationMode === "TEST") {
-                isStoreOpen = true;
-            } else if (operationMode === "SD") {
-                const isOpenDay = (dayOfWeek === 0 || dayOfWeek === 6);
-                const openTime = 18 * 60 + 30;
-                const closeTime = 23 * 60;
-                isStoreOpen = isOpenDay && (totalMinutes >= openTime && totalMinutes <= closeTime);
-            } else if (operationMode === "VSD") {
-                const isOpenDay = (dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6);
-                const openTime = 18 * 60 + 30;
-                const closeTime = 23 * 60;
-                isStoreOpen = isOpenDay && (totalMinutes >= openTime && totalMinutes <= closeTime);
-            } else if (operationMode === "OFFICIAL") {
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                    const openTime = 16 * 60;
-                    const closeTime = 24 * 60;
-                    isStoreOpen = (totalMinutes >= openTime && totalMinutes < closeTime);
-                } else {
-                    const openTime = 11 * 60;
-                    const closeTime = 24 * 60;
-                    isStoreOpen = (totalMinutes >= openTime && totalMinutes < closeTime);
-                }
-            }
-
-            const badge = document.getElementById("store-status-badge");
-            const banner = document.getElementById("closed-banner");
-
-            if (isStoreOpen) {
-                if (badge) {
-                    badge.className = "px-3 py-1 rounded-full font-extrabold text-[11px] tracking-wider uppercase flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
-                    badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span> COCINA ABIERTA`;
-                }
-                if (banner) banner.classList.add("hidden");
-            } else {
-                if (badge) {
-                    badge.className = "px-3 py-1 rounded-full font-extrabold text-[11px] tracking-wider uppercase flex items-center gap-2 bg-red-500/20 text-red-300 border border-red-500/40";
-                    badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> COCINA CERRADA`;
-                }
-                if (banner) banner.classList.remove("hidden");
-            }
-
-            updateCartActionsState();
-        }
-
-        function changeOperationMode(val) {
-            operationMode = val;
-            evaluateStoreStatus();
-            renderCatalog();
-            showToast(`Modo cambiado a: ${val}`, "info");
-        }
-
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = 
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
-
-        function getDeliveryFee(distKm) {
-            for (let rate of BRAND_CONFIG.deliveryRates) {
-                if (distKm <= rate.maxDist) return rate.fee;
-            }
-            return -1;
-        }
-
-        function autoFindNearestBranch(userLat, userLng) {
-            let nearest = BRAND_CONFIG.sedes[0];
-            let minDistance = Infinity;
-
-            BRAND_CONFIG.sedes.forEach(branch => {
-                const dist = calculateDistance(userLat, userLng, branch.lat, branch.lng);
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    nearest = branch;
-                }
-            });
-
-            assignedBranch = nearest;
-            calculatedDistanceKm = minDistance;
-            calculatedDeliveryFee = getDeliveryFee(minDistance);
-
-            const titleEl = document.getElementById("assigned-sede-title");
-            const phoneEl = document.getElementById("assigned-sede-phone");
-            const pillEl = document.getElementById("sede-distance-pill");
-            const heroSedeText = document.getElementById("hero-assigned-sede-text");
-
-            if (titleEl) titleEl.textContent = `${nearest.name} (${nearest.address})`;
-            if (phoneEl) phoneEl.innerHTML = `Número WhatsApp de atención: <strong class="text-emerald-700">${nearest.phone}</strong>`;
-            if (pillEl) pillEl.textContent = `${minDistance.toFixed(1)} km`;
-            if (heroSedeText) heroSedeText.textContent = `📍 Sede asignada: ${nearest.name} (${minDistance.toFixed(1)} km de ti)`;
-
-            const distBadge = document.getElementById("calc-distance");
-            const feeBadge = document.getElementById("calc-fee-badge");
-
-            if (distBadge) distBadge.textContent = `${minDistance.toFixed(1)} km`;
-            if (feeBadge) {
-                if (calculatedDeliveryFee < 0) {
-                    feeBadge.textContent = "Fuera de Cobertura (>9km)";
-                    feeBadge.className = "font-extrabold text-djavys-red font-heading";
-                } else {
-                    feeBadge.textContent = `Tarifa Delivery: S/ ${calculatedDeliveryFee.toFixed(2)}`;
-                    feeBadge.className = "font-extrabold text-djavys-gold font-heading";
-                }
-            }
-
-            calculateCartTotals();
-        }
-
-        function initLeafletMap() {
-            if (leafletMap) return;
-
-            const mapDiv = document.getElementById("leaflet-map");
-            if (!mapDiv) return;
-
-            leafletMap = L.map('leaflet-map').setView([currentGPSCoords.lat, currentGPSCoords.lng], 15);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(leafletMap);
-
-            leafletMarker = L.marker([currentGPSCoords.lat, currentGPSCoords.lng], { draggable: true }).addTo(leafletMap);
-
-            leafletMarker.on('dragend', function (e) {
-                const position = leafletMarker.getLatLng();
-                currentGPSCoords.lat = position.lat;
-                currentGPSCoords.lng = position.lng;
-                autoFindNearestBranch(position.lat, position.lng);
-                reverseGeocode(position.lat, position.lng);
-            });
-
-            leafletMap.on('click', function (e) {
-                leafletMarker.setLatLng(e.latlng);
-                currentGPSCoords.lat = e.latlng.lat;
-                currentGPSCoords.lng = e.latlng.lng;
-                autoFindNearestBranch(e.latlng.lat, e.latlng.lng);
-                reverseGeocode(e.latlng.lat, e.latlng.lng);
-            });
-        }
-
-        function reverseGeocode(lat, lng) {
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.display_name) {
-                        const input = document.getElementById("cust-address");
-                        if (input && !input.value) {
-                            input.value = data.display_name.split(',').slice(0, 3).join(',');
-                        }
-                    }
-                }).catch(() => {});
-        }
-
-        function locateUserGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        currentGPSCoords.lat = pos.coords.latitude;
-                        currentGPSCoords.lng = pos.coords.longitude;
-                        if (leafletMap && leafletMarker) {
-                            leafletMap.setView([currentGPSCoords.lat, currentGPSCoords.lng], 16);
-                            leafletMarker.setLatLng([currentGPSCoords.lat, currentGPSCoords.lng]);
-                        }
-                        autoFindNearestBranch(currentGPSCoords.lat, currentGPSCoords.lng);
-                        reverseGeocode(currentGPSCoords.lat, currentGPSCoords.lng);
-                        showToast("Ubicación GPS fijada correctamente", "success");
-                    },
-                    () => {
-                        showToast("No pudimos acceder a tu GPS. Usa el mapa para ubicarte.", "error");
-                    }
-                );
-            }
-        }
-
-        function searchAddressOnMap() {
-            const addr = document.getElementById("cust-address").value;
-            if (!addr) {
-                showToast("Escribe una dirección para buscar", "error");
-                return;
-            }
-
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr + ', Piura, Peru')}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        const lat = parseFloat(data[0].lat);
-                        const lon = parseFloat(data[0].lon);
-                        currentGPSCoords.lat = lat;
-                        currentGPSCoords.lng = lon;
-                        if (leafletMap && leafletMarker) {
-                            leafletMap.setView([lat, lon], 16);
-                            leafletMarker.setLatLng([lat, lon]);
-                        }
-                        autoFindNearestBranch(lat, lon);
-                        showToast("Dirección localizada en mapa", "success");
-                    } else {
-                        showToast("No encontramos la dirección exacta. Ajusta en el mapa.", "error");
-                    }
-                })
-                .catch(() => showToast("Error al buscar dirección", "error"));
-        }
-
-        function getUniqueCategories() {
-            const categories = ["ALL"];
-            PRODUCT_CATALOG.forEach(p => {
-                if (!categories.includes(p.category)) categories.push(p.category);
-            });
-            return categories;
-        }
-
-        function selectCategory(categoryName) {
-            activeCategoryFilter = categoryName;
-            renderCategoryTabs();
-            renderCatalog();
-
-            if (categoryName !== "ALL") {
-                const section = document.getElementById(`cat-section-${categoryName.replace(/[^a-zA-Z0-9]/g, '')}`);
-                if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }
-
-        function onSearchInput(val) {
-            currentSearchQuery = val.toLowerCase().trim();
-            const clearBtn = document.getElementById("clear-search-btn");
-            if (clearBtn) {
-                if (currentSearchQuery) clearBtn.classList.remove("hidden");
-                else clearBtn.classList.add("hidden");
-            }
-            renderCatalog();
-        }
-
-        function clearSearch() {
-            currentSearchQuery = "";
-            const input = document.getElementById("search-input");
-            if (input) input.value = "";
-            const clearBtn = document.getElementById("clear-search-btn");
-            if (clearBtn) clearBtn.classList.add("hidden");
-            renderCatalog();
-        }
-
-        function openProductModal(productId) {
-            const product = PRODUCT_CATALOG.find(p => p.id === productId);
-            if (!product) return;
-
-            activeModalProduct = product;
-            activeModalQty = 1;
-            selectedSaucesByUnit = { 0: BRAND_CONFIG.availableSauces.slice(0, 3) };
-
-            document.getElementById("modal-img").src = product.image;
-            document.getElementById("modal-category").textContent = product.category;
-            document.getElementById("modal-title").textContent = product.name;
-            document.getElementById("modal-price").textContent = `S/ ${product.price.toFixed(2)}`;
-            document.getElementById("modal-description").textContent = product.description;
-            document.getElementById("modal-qty").textContent = activeModalQty;
-            document.getElementById("modal-notes").value = "";
-
-            renderSaucesCustomizationSection();
-            updateModalButtonPrice();
-
-            document.getElementById("product-modal").classList.remove("hidden");
-        }
-
-        function closeProductModal() {
-            document.getElementById("product-modal").classList.add("hidden");
-            activeModalProduct = null;
-        }
-
-        function adjustModalQuantity(delta) {
-            activeModalQty += delta;
-            if (activeModalQty < 1) activeModalQty = 1;
-            document.getElementById("modal-qty").textContent = activeModalQty;
-
-            if (!selectedSaucesByUnit[activeModalQty - 1] && activeModalProduct && activeModalProduct.allowsSauces) {
-                selectedSaucesByUnit[activeModalQty - 1] = BRAND_CONFIG.availableSauces.slice(0, 3);
-            }
-
-            renderSaucesCustomizationSection();
-            updateModalButtonPrice();
-        }
-
-        function toggleUnitSauce(unitIndex, sauceName, isChecked) {
-            if (!selectedSaucesByUnit[unitIndex]) selectedSaucesByUnit[unitIndex] = [];
-
-            if (isChecked) {
-                if (!selectedSaucesByUnit[unitIndex].includes(sauceName)) {
-                    selectedSaucesByUnit[unitIndex].push(sauceName);
-                }
-            } else {
-                selectedSaucesByUnit[unitIndex] = selectedSaucesByUnit[unitIndex].filter(s => s !== sauceName);
-            }
-        }
-
-        function updateModalButtonPrice() {
-            if (!activeModalProduct) return;
-            const totalPrice = activeModalProduct.price * activeModalQty;
-            document.getElementById("modal-btn-text").textContent = `Agregar al Carrito • S/ ${totalPrice.toFixed(2)}`;
-        }
-
-        function addModalProductToCart() {
-            if (!activeModalProduct) return;
-
-            const notes = document.getElementById("modal-notes").value.trim();
-            const saucesArr = [];
-
-            for (let i = 0; i < activeModalQty; i++) {
-                saucesArr.push(selectedSaucesByUnit[i] ? [...selectedSaucesByUnit[i]] : []);
-            }
-
-            const cartKey = `${activeModalProduct.id}_${JSON.stringify(saucesArr)}_${notes}`;
-
-            const existingIndex = cartItems.findIndex(item => item.cartKey === cartKey);
-
-            if (existingIndex > -1) {
-                cartItems[existingIndex].quantity += activeModalQty;
-            } else {
-                cartItems.push({
-                    cartKey: cartKey,
-                    productId: activeModalProduct.id,
-                    quantity: activeModalQty,
-                    unitPrice: activeModalProduct.price,
-                    saucesByUnit: saucesArr,
-                    notes: notes
-                });
-            }
-
-            closeProductModal();
-            updateCartUI();
-            showToast(`${activeModalProduct.name} agregado al pedido`, "success");
-        }
-
-        function quickAddToCart(productId, event) {
-            if (event) event.stopPropagation();
-            if (!isStoreOpen) {
-                showToast("La cocina está cerrada por horario", "error");
-                return;
-            }
-
-            const product = PRODUCT_CATALOG.find(p => p.id === productId);
-            if (!product) return;
-
-            const defaultSauces = product.allowsSauces ? [BRAND_CONFIG.availableSauces.slice(0, 3)] : [];
-            const cartKey = `${product.id}_${JSON.stringify(defaultSauces)}_`;
-
-            const existingIndex = cartItems.findIndex(item => item.cartKey === cartKey);
-
-            if (existingIndex > -1) {
-                cartItems[existingIndex].quantity += 1;
-            } else {
-                cartItems.push({
-                    cartKey: cartKey,
-                    productId: product.id,
-                    quantity: 1,
-                    unitPrice: product.price,
-                    saucesByUnit: defaultSauces,
-                    notes: ""
-                });
-            }
-
-            updateCartUI();
-            showToast(`${product.name} agregado`, "success");
-        }
-
-        function toggleCartDrawer() {
-            const drawer = document.getElementById("cart-drawer");
-            const overlay = document.getElementById("cart-drawer-overlay");
-
-            if (drawer.classList.contains("translate-x-full")) {
-                drawer.classList.remove("translate-x-full");
-                overlay.classList.remove("hidden");
-                setTimeout(() => overlay.classList.remove("opacity-0"), 10);
-
-                setTimeout(() => {
-                    initLeafletMap();
-                    if (leafletMap) leafletMap.invalidateSize();
-                }, 300);
-            } else {
-                drawer.classList.add("translate-x-full");
-                overlay.classList.add("opacity-0");
-                setTimeout(() => overlay.classList.add("hidden"), 300);
-            }
-        }
-
-        function updateCartItemQuantity(cartKey, delta) {
-            const index = cartItems.findIndex(item => item.cartKey === cartKey);
-            if (index > -1) {
-                cartItems[index].quantity += delta;
-                if (cartItems[index].quantity <= 0) {
-                    cartItems.splice(index, 1);
-                }
-            }
-            updateCartUI();
-        }
-
-        function calculateCartTotals() {
-            const subtotal = cartItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
-            const deliveryFee = (deliveryType === "delivery" && subtotal > 0) 
-                ? (calculatedDeliveryFee < 0 ? 0 : calculatedDeliveryFee) 
-                : 0;
-            const total = subtotal + deliveryFee;
-
-            document.getElementById("summary-subtotal").textContent = `S/ ${subtotal.toFixed(2)}`;
-            document.getElementById("summary-delivery").textContent = `S/ ${deliveryFee.toFixed(2)}`;
-            document.getElementById("summary-total").textContent = `S/ ${total.toFixed(2)}`;
-            document.getElementById("mobile-bar-total").textContent = `S/ ${total.toFixed(2)}`;
-
-            calculateChange();
-        }
-
-        function updateCartActionsState() {
-            const btnProceed = document.getElementById("btn-proceed-checkout");
-            const btnSubmit = document.getElementById("btn-submit-whatsapp");
-
-            const isCartEmpty = cartItems.length === 0;
-            const isDeliveryBlocked = (deliveryType === "delivery" && calculatedDeliveryFee < 0);
-
-            if (btnProceed) {
-                btnProceed.disabled = isCartEmpty || !isStoreOpen;
-                if (isCartEmpty || !isStoreOpen) {
-                    btnProceed.className = "w-full py-3.5 bg-stone-300 text-stone-500 rounded-xl font-black font-heading text-sm flex items-center justify-center gap-2 cursor-not-allowed";
-                } else {
-                    btnProceed.className = "w-full py-3.5 bg-gradient-to-r from-djavys-red to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-xl font-black font-heading text-sm flex items-center justify-center gap-2 shadow-xl shadow-djavys-red/30 transition active:scale-98 cursor-pointer";
-                }
-            }
-
-            if (btnSubmit) {
-                btnSubmit.disabled = isCartEmpty || !isStoreOpen || isDeliveryBlocked;
-            }
-        }
-
-        function goToStep1() {
-            document.getElementById("cart-step-1").classList.remove("hidden");
-            document.getElementById("cart-step-2").classList.add("hidden");
-            document.getElementById("step-1-actions").classList.remove("hidden");
-            document.getElementById("step-2-actions").classList.add("hidden");
-            document.getElementById("drawer-step-subtitle").textContent = "Paso 1: Revisa tus productos y cremas";
-        }
-
-        function goToStep2() {
-            if (cartItems.length === 0) {
-                showToast("Tu carrito está vacío", "error");
-                return;
-            }
-            if (!isStoreOpen) {
-                showToast("La cocina está cerrada por horario", "error");
-                return;
-            }
-
-            document.getElementById("cart-step-1").classList.add("hidden");
-            document.getElementById("cart-step-2").classList.remove("hidden");
-            document.getElementById("step-1-actions").classList.add("hidden");
-            document.getElementById("step-2-actions").classList.remove("hidden");
-            document.getElementById("drawer-step-subtitle").textContent = "Paso 2: Datos de envío y pago";
-
-            setTimeout(() => {
-                initLeafletMap();
-                if (leafletMap) leafletMap.invalidateSize();
-            }, 100);
-        }
-
-        function setDeliveryType(type) {
-            deliveryType = type;
-            const btnDeliv = document.getElementById("btn-type-delivery");
-            const btnPick = document.getElementById("btn-type-pickup");
-            const delivFields = document.getElementById("delivery-fields");
-            const pickFields = document.getElementById("pickup-fields");
-
-            if (type === "delivery") {
-                btnDeliv.className = "py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition bg-djavys-red text-white shadow-md";
-                btnPick.className = "py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition text-stone-600 hover:text-stone-900";
-                delivFields.classList.remove("hidden");
-                pickFields.classList.add("hidden");
-            } else {
-                btnPick.className = "py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition bg-djavys-red text-white shadow-md";
-                btnDeliv.className = "py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition text-stone-600 hover:text-stone-900";
-                pickFields.classList.remove("hidden");
-                delivFields.classList.add("hidden");
-            }
-
-            calculateCartTotals();
-            updateCartActionsState();
-        }
-
-        function updatePickupBranchDetails() {
-            const select = document.getElementById("pickup-branch");
-            const branchId = select.value;
-            const branch = BRAND_CONFIG.sedes.find(s => s.id === branchId) || BRAND_CONFIG.sedes[0];
-
-            document.getElementById("pickup-address-text").textContent = `📍 ${branch.name} (${branch.address})`;
-            document.getElementById("pickup-gmaps-link").href = `https://maps.google.com/?q=${branch.lat},${branch.lng}`;
-        }
-
-        function setPaymentMethod(method) {
-            paymentMethod = method;
-            const btnYape = document.getElementById("btn-pay-yape");
-            const btnCash = document.getElementById("btn-pay-cash");
-            const yapeBox = document.getElementById("yape-info-box");
-            const cashBox = document.getElementById("cash-info-box");
-
-            if (method === "yape") {
-                btnYape.className = "py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition bg-djavys-purple text-white shadow-md";
-                btnCash.className = "py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition text-stone-600 hover:text-stone-900";
-                yapeBox.classList.remove("hidden");
-                cashBox.classList.add("hidden");
-            } else {
-                btnCash.className = "py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition bg-emerald-600 text-white shadow-md";
-                btnYape.className = "py-2.5 rounded-lg font-extrabold font-heading flex items-center justify-center gap-2 transition text-stone-600 hover:text-stone-900";
-                cashBox.classList.remove("hidden");
-                yapeBox.classList.add("hidden");
-            }
-        }
-
-        function calculateChange() {
-            if (paymentMethod !== "cash") return;
-
-            const cashInput = document.getElementById("cash-amount");
-            const warningMsg = document.getElementById("cash-warning-msg");
-            const changeText = document.getElementById("calc-change-text");
-
-            const subtotal = cartItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
-            const deliveryFee = (deliveryType === "delivery" && subtotal > 0) ? (calculatedDeliveryFee < 0 ? 0 : calculatedDeliveryFee) : 0;
-            const grandTotal = subtotal + deliveryFee;
-
-            const givenCash = parseFloat(cashInput.value) || 0;
-
-            if (givenCash > 0 && givenCash < grandTotal) {
-                warningMsg.classList.remove("hidden");
-                changeText.textContent = "S/ 0.00";
-            } else if (givenCash >= grandTotal) {
-                warningMsg.classList.add("hidden");
-                const change = givenCash - grandTotal;
-                changeText.textContent = `S/ ${change.toFixed(2)}`;
-            } else {
-                warningMsg.classList.add("hidden");
-                changeText.textContent = "S/ 0.00";
-            }
-        }
-
-        function copyYapeNumber() {
-            const num = BRAND_CONFIG.payment.yapeNumber;
-            const tempInput = document.createElement("input");
-            tempInput.value = num;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            showToast("Número Yape copiado al portapapeles", "success");
-        }
-
-        function saveUserDataToStorage() {
-            const checkbox = document.getElementById("save-data-checkbox");
-            if (checkbox && checkbox.checked) {
-                const data = {
-                    name: document.getElementById("cust-name").value,
-                    phone: document.getElementById("cust-phone").value,
-                    address: document.getElementById("cust-address").value,
-                    reference: document.getElementById("cust-reference").value,
-                    lat: currentGPSCoords.lat,
-                    lng: currentGPSCoords.lng
-                };
-                localStorage.setItem("djavys_user_data", JSON.stringify(data));
-            }
-        }
-
-        function loadUserDataFromStorage() {
-            try {
-                const saved = localStorage.getItem("djavys_user_data");
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    if (data.name) document.getElementById("cust-name").value = data.name;
-                    if (data.phone) document.getElementById("cust-phone").value = data.phone;
-                    if (data.address) document.getElementById("cust-address").value = data.address;
-                    if (data.reference) document.getElementById("cust-reference").value = data.reference;
-                    if (data.lat && data.lng) {
-                        currentGPSCoords.lat = data.lat;
-                        currentGPSCoords.lng = data.lng;
-                    }
-                }
-            } catch (e) {}
-        }
-
-        function submitOrderToWhatsApp() {
-            if (!isStoreOpen) {
-                showToast("Cocina cerrada. No se pueden recibir pedidos.", "error");
-                return;
-            }
-
-            const name = document.getElementById("cust-name").value.trim();
-            const phone = document.getElementById("cust-phone").value.trim();
-
-            if (!name) {
-                showToast("Por favor ingresa tu Nombre Completo", "error");
-                return;
-            }
-            if (!phone || phone.length < 9) {
-                showToast("Por favor ingresa un teléfono celular válido de 9 dígitos", "error");
-                return;
-            }
-
-            let address = "";
-            let reference = "";
-
-            if (deliveryType === "delivery") {
-                address = document.getElementById("cust-address").value.trim();
-                reference = document.getElementById("cust-reference").value.trim();
-
-                if (!address) {
-                    showToast("Por favor ingresa tu Dirección de entrega", "error");
-                    return;
-                }
-                if (calculatedDeliveryFee < 0) {
-                    showToast("Ubicación fuera de cobertura para delivery (>9km)", "error");
-                    return;
-                }
-            }
-
-            const subtotal = cartItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
-            const deliveryFee = (deliveryType === "delivery") ? calculatedDeliveryFee : 0;
-            const grandTotal = subtotal + deliveryFee;
-
-            if (paymentMethod === "cash") {
-                const cashGiven = parseFloat(document.getElementById("cash-amount").value) || 0;
-                if (cashGiven < grandTotal) {
-                    showToast("El monto con el que pagas debe ser mayor o igual al total", "error");
-                    return;
-                }
-            }
-
-            saveUserDataToStorage();
-
-            const targetPhone = (deliveryType === "delivery") 
-                ? assignedBranch.phone 
-                : (BRAND_CONFIG.sedes.find(s => s.id === document.getElementById("pickup-branch").value) || assignedBranch).phone;
-
-            let msg = `🔥 *NUEVO PEDIDO D'JAVYS* 🔥\n\n`;
-            msg += `👤 *Cliente:* ${name}\n`;
-            msg += `📞 *Teléfono:* ${phone}\n`;
-            msg += `📍 *Sede Atendiendo:* ${assignedBranch.name}\n\n`;
-
-            msg += `🛵 *Modalidad:* ${deliveryType === 'delivery' ? 'DELIVERY A DOMICILIO' : 'RECOJO EN LOCAL'}\n`;
-
-            if (deliveryType === "delivery") {
-                msg += `🏠 *Dirección:* ${address}\n`;
-                if (reference) msg += `🏢 *Referencia:* ${reference}\n`;
-                msg += `🗺️ *Ubicación GPS:* https://maps.google.com/?q=${currentGPSCoords.lat},${currentGPSCoords.lng}\n\n`;
-            } else {
-                const pickSede = BRAND_CONFIG.sedes.find(s => s.id === document.getElementById("pickup-branch").value) || assignedBranch;
-                msg += `📍 *Lugar de Recojo:* ${pickSede.name} (${pickSede.address})\n\n`;
-            }
-
-            msg += `🍔 *DETALLE DEL PEDIDO:*\n`;
-
-            cartItems.forEach((item, idx) => {
-                const p = PRODUCT_CATALOG.find(prod => prod.id === item.productId);
-                if (!p) return;
-
-                msg += `*${idx + 1}. ${item.quantity}x ${p.name}* - S/ ${(item.unitPrice * item.quantity).toFixed(2)}\n`;
-
-                if (p.allowsSauces && item.saucesByUnit) {
-                    item.saucesByUnit.forEach((sList, uIdx) => {
-                        const sauceText = sList.length > 0 ? sList.join(", ") : "Sin cremas";
-                        msg += `   └ Porción #${uIdx + 1}: ${sauceText}\n`;
-                    });
-                }
-
-                if (item.notes) {
-                    msg += `   └ 📝 Nota: ${item.notes}\n`;
-                }
-            });
-
-            msg += `\n💰 *DESGLOSE FINANCIERO:*\n`;
-            msg += `• Subtotal: S/ ${subtotal.toFixed(2)}\n`;
-            if (deliveryType === "delivery") {
-                msg += `• Delivery (${calculatedDistanceKm.toFixed(1)} km): S/ ${deliveryFee.toFixed(2)}\n`;
-            }
-            msg += `👉 *TOTAL GENERAL: S/ ${grandTotal.toFixed(2)}*\n\n`;
-
-            msg += `💳 *Método de Pago:* ${paymentMethod === 'yape' ? 'Yape / Plin (Adjuntará captura)' : 'Efectivo al motorizado'}\n`;
-
-            if (paymentMethod === "cash") {
-                const cashGiven = parseFloat(document.getElementById("cash-amount").value) || 0;
-                const change = cashGiven - grandTotal;
-                msg += `💵 Paga con: S/ ${cashGiven.toFixed(2)} (Vuelto: S/ ${change.toFixed(2)})\n`;
-            }
-
-            msg += `\n¡Muchas gracias por su atención! 🙌`;
-
-            const whatsappUrl = `https://api.whatsapp.com/send?phone=51${targetPhone}&text=${encodeURIComponent(msg)}`;
-            window.open(whatsappUrl, "_blank");
-
-            showToast("Pedido compilado. Redirigiendo a WhatsApp...", "success");
-        }
-
-        function showToast(message, type = "info") {
-            const container = document.getElementById("toast-container");
-            const toast = document.createElement("div");
-
-            let bgColor = "bg-stone-900 border-stone-800 text-white";
-            let icon = '<i class="fa-solid fa-circle-info text-blue-400"></i>';
-
-            if (type === "success") {
-                bgColor = "bg-stone-900 border-emerald-500/60 text-emerald-300";
-                icon = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
-            } else if (type === "error") {
-                bgColor = "bg-stone-900 border-djavys-red/60 text-red-300";
-                icon = '<i class="fa-solid fa-triangle-exclamation text-djavys-red"></i>';
-            }
-
-            toast.className = `p-3.5 rounded-2xl border shadow-2xl text-xs font-bold font-heading flex items-center gap-3 backdrop-blur-md pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0 max-w-xs ${bgColor}`;
-            toast.innerHTML = `${icon}<span>${message}</span>`;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove("translate-y-2", "opacity-0");
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add("opacity-0", "translate-y-2");
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        }
-
-        function renderCategoryTabs() {
-            const container = document.getElementById("category-tabs");
-            const categories = getUniqueCategories();
-
-            container.innerHTML = categories.map(cat => {
-                const count = cat === "ALL" 
-                    ? PRODUCT_CATALOG.length 
-                    : PRODUCT_CATALOG.filter(p => p.category === cat).length;
-                
-                const label = cat === "ALL" ? "Todo el Menú" : cat;
-                const isActive = activeCategoryFilter === cat;
-
-                return `
-                    <button onclick="selectCategory('${cat}')" 
-                            class="px-4 py-2 rounded-xl text-xs font-bold shrink-0 flex items-center gap-2 transition duration-200 font-heading tracking-wide ${
-                                isActive 
-                                    ? 'bg-gradient-to-r from-djavys-red to-red-700 text-white shadow-md shadow-djavys-red/30' 
-                                    : 'bg-stone-200/80 hover:bg-stone-300/80 text-stone-700 border border-stone-300/60'
-                            }">
-                        <span>${label}</span>
-                        <span class="${isActive ? 'bg-white text-djavys-red' : 'bg-stone-300 text-stone-800'} text-[10px] px-2 py-0.5 rounded-full font-black">
-                            ${count}
-                        </span>
-                    </button>
-                `;
-            }).join("");
-        }
-
-        function renderCatalog() {
-            const container = document.getElementById("catalog-container");
-            const emptyState = document.getElementById("empty-state");
-
-            let filtered = PRODUCT_CATALOG.filter(p => {
-                const matchesCategory = (activeCategoryFilter === "ALL") || (p.category === activeCategoryFilter);
-                const matchesQuery = !currentSearchQuery || 
-                    p.name.toLowerCase().includes(currentSearchQuery) || 
-                    p.description.toLowerCase().includes(currentSearchQuery);
-                return matchesCategory && matchesQuery;
-            });
-
-            if (filtered.length === 0) {
-                container.innerHTML = "";
-                emptyState.classList.remove("hidden");
-                return;
-            } else {
-                emptyState.classList.add("hidden");
-            }
-
-            const grouped = {};
-            filtered.forEach(p => {
-                if (!grouped[p.category]) grouped[p.category] = [];
-                grouped[p.category].push(p);
-            });
-
-            container.innerHTML = Object.keys(grouped).map(catName => {
-                const catId = `cat-section-${catName.replace(/[^a-zA-Z0-9]/g, '')}`;
-                
-                const cardsHtml = grouped[catName].map(product => {
-                    return `
-                        <div class="bg-white border border-stone-200/90 rounded-3xl overflow-hidden hover:border-djavys-red/60 hover:shadow-2xl transition duration-300 flex flex-col group shadow-sm relative">
-                            <div onclick="openProductModal('${product.id}')" class="cursor-pointer relative h-48 overflow-hidden bg-stone-100">
-                                <img src="${product.image}" 
-                                     onerror="this.onerror=null; this.src='https://placehold.co/600x400/FFF8F0/D92323?text=D%27JAVYS'" 
-                                     alt="${product.name}" 
-                                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                                
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-
-                                ${product.badge ? `
-                                    <span class="absolute top-3 left-3 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg food-badge-red text-white shadow-md">
-                                        ${product.badge}
-                                    </span>
-                                ` : ''}
-
-                                <div class="absolute bottom-3 right-3 bg-stone-900/90 backdrop-blur-md px-3 py-1 rounded-xl border border-stone-800 font-black text-amber-300 font-heading text-sm shadow-lg">
-                                    S/ ${product.price.toFixed(2)}
+                    <!-- VISTA 2: CHECKOUT -->
+                    <div x-show="currentStep === 'checkout'" class="space-y-4 sm:space-y-5">
+
+                        <!-- SELECTOR DE SEDE -->
+                        <div class="space-y-2">
+                            <h3 class="font-display font-semibold text-xs sm:text-sm text-dj-teal border-b border-dj-ember pb-1 uppercase tracking-wider">¿Desde qué sede pedirás?</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <template x-for="sede in sedes" :key="sede.id">
+                                    <button type="button" @click="selectSede(sede.id)"
+                                            :class="selectedSedeId === sede.id ? 'bg-dj-teal text-white border-dj-teal' : 'bg-dj-sand text-dj-charcoal border-dj-teal/10'"
+                                            class="text-left p-2.5 rounded-xl border text-[11px] font-bold transition">
+                                        <span x-text="sede.name" class="block"></span>
+                                        <span class="block font-semibold opacity-75 text-[9px] mt-0.5 line-clamp-2" x-text="sede.address"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="bg-dj-teal/5 p-3 sm:p-4 rounded-xl border border-dj-teal/10 flex items-center justify-between gap-3">
+                            <div class="flex-1">
+                                <h4 class="text-[10px] sm:text-xs font-black text-dj-teal uppercase tracking-wider">💾 Guardar mis datos</h4>
+                                <p class="text-[9px] sm:text-[10px] text-dj-charcoal/80 font-bold mt-0.5">Rellena el formulario automáticamente en tus próximas compras.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" x-model="saveUserData" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-dj-teal"></div>
+                            </label>
+                        </div>
+
+                        <div class="space-y-3">
+                            <h3 class="font-display font-semibold text-xs sm:text-sm text-dj-teal border-b border-dj-ember pb-1 uppercase tracking-wider">Datos Personales</h3>
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-dj-charcoal mb-1">Nombre completo *</label>
+                                <input type="text" x-model="checkoutName" placeholder="Tu nombre y apellido" class="w-full text-xs py-2.5 px-3 rounded-xl border border-dj-teal/20 focus:border-dj-teal focus:ring-1 focus:ring-dj-teal outline-none bg-dj-sand font-semibold text-dj-charcoal">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-dj-charcoal mb-1">Celular (9 dígitos) *</label>
+                                <input type="tel" x-model="checkoutPhone" maxlength="9" placeholder="912345678" class="w-full text-xs py-2.5 px-3 rounded-xl border border-dj-teal/20 focus:border-dj-teal focus:ring-1 focus:ring-dj-teal outline-none bg-dj-sand font-semibold text-dj-charcoal">
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <h3 class="font-display font-semibold text-xs sm:text-sm text-dj-teal border-b border-dj-ember pb-1 uppercase tracking-wider">Detalles del Envío</h3>
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-dj-charcoal mb-1">Forma de Entrega *</label>
+                                <div class="grid grid-cols-2 gap-2 mb-2">
+                                    <button @click="checkoutDeliveryType = 'delivery'" :class="checkoutDeliveryType === 'delivery' ? 'bg-dj-teal text-white font-bold' : 'bg-dj-sand text-dj-charcoal'" class="py-2 rounded-xl text-xs text-center transition font-semibold border border-dj-teal/10">🚗 Delivery</button>
+                                    <button @click="checkoutDeliveryType = 'local'" :class="checkoutDeliveryType === 'local' ? 'bg-dj-teal text-white font-bold' : 'bg-dj-sand text-dj-charcoal'" class="py-2 rounded-xl text-xs text-center transition font-semibold border border-dj-teal/10">🏪 Recoger en Local</button>
                                 </div>
                             </div>
 
-                            <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
-                                <div onclick="openProductModal('${product.id}')" class="cursor-pointer space-y-1">
-                                    <h3 class="font-extrabold text-stone-900 text-base font-heading group-hover:text-djavys-red transition duration-200">${product.name}</h3>
-                                    <p class="text-xs text-stone-600 line-clamp-2 leading-relaxed font-medium">${product.description}</p>
+                            <div x-show="checkoutDeliveryType === 'delivery'" class="space-y-3">
+                                <div>
+                                    <label class="block text-[11px] font-extrabold text-dj-charcoal mb-1">Dirección exacta *</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" x-model="checkoutAddress" x-on:input.debounce.800ms="geocodeAddressSilently()" @keydown.enter.prevent="geocodeAddress()"
+                                               placeholder="Calle, Manzana, Lote o Número de Casa" class="flex-1 text-xs py-2.5 px-3 rounded-xl border border-dj-teal/20 focus:border-dj-teal outline-none bg-dj-sand font-semibold text-dj-charcoal">
+                                        <button type="button" @click="geocodeAddress()" class="px-4 py-2.5 bg-dj-teal hover:bg-dj-tealDark text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                                            <i class="fa-solid fa-magnifying-glass-location text-sm"></i><span>Buscar</span>
+                                        </button>
+                                    </div>
                                 </div>
-
-                                <div class="flex items-center justify-between pt-3 border-t border-stone-100 gap-2">
-                                    <span class="text-[11px] font-semibold text-stone-500 flex items-center gap-1.5">
-                                        ${product.allowsSauces 
-                                            ? '<i class="fa-solid fa-droplet text-djavys-orange text-xs"></i> Con cremas' 
-                                            : '<i class="fa-solid fa-check text-stone-400 text-xs"></i> Porción lista'}
-                                    </span>
-
-                                    <button onclick="quickAddToCart('${product.id}', event)" 
-                                            ${!isStoreOpen ? 'disabled' : ''} 
-                                            class="px-4 py-2 rounded-xl font-black text-xs font-heading flex items-center gap-2 transition duration-200 ${
-                                                isStoreOpen 
-                                                    ? 'bg-gradient-to-r from-djavys-red to-red-700 hover:from-red-600 hover:to-red-800 text-white shadow-md shadow-djavys-red/30 active:scale-95' 
-                                                    : 'bg-stone-200 text-stone-400 cursor-not-allowed'
-                                            }">
-                                        <i class="fa-solid fa-plus text-xs"></i>
-                                        <span>AGREGAR</span>
+                                <div>
+                                    <button type="button" @click="getCurrentLocationGPS()" class="w-full py-2.5 px-4 bg-dj-ember/10 hover:bg-dj-ember/20 text-dj-ember border-2 border-dj-ember border-dashed rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-location-crosshairs text-sm"></i><span>📍 Usar mi ubicación GPS actual</span>
                                     </button>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                }).join("");
 
-                return `
-                    <section id="${catId}" class="space-y-4">
-                        <div class="flex items-center gap-3 border-b border-stone-200 pb-3">
-                            <div class="w-2.5 h-7 bg-djavys-red rounded-full"></div>
-                            <h2 class="text-xl font-black text-stone-900 font-heading tracking-wider uppercase">${catName}</h2>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                            ${cardsHtml}
-                        </div>
-                    </section>
-                `;
-            }).join("");
-        }
+                            <div x-show="checkoutDeliveryType === 'delivery'">
+                                <label class="block text-[11px] font-extrabold text-dj-charcoal mb-1">Referencia <span class="text-gray-400 font-normal">(Opcional)</span></label>
+                                <input type="text" x-model="checkoutReference" placeholder="Frente al parque, al costado de tienda, etc." class="w-full text-xs py-2.5 px-3 rounded-xl border border-dj-teal/20 focus:border-dj-teal outline-none bg-dj-sand font-semibold text-dj-charcoal">
+                            </div>
 
-        function renderSaucesCustomizationSection() {
-            const wrapper = document.getElementById("sauces-container-wrapper");
-            const listContainer = document.getElementById("sauces-units-list");
+                            <div x-show="checkoutDeliveryType === 'delivery'" class="space-y-1">
+                                <label class="block text-[11px] font-extrabold text-dj-charcoal">Ubicación GPS (Haz Clic o Arrastra el Pin) *</label>
+                                <div id="map" class="h-40 sm:h-56 rounded-2xl border-2 border-dj-teal/20 overflow-hidden shadow-inner mt-1"></div>
 
-            if (!activeModalProduct || !activeModalProduct.allowsSauces) {
-                wrapper.classList.add("hidden");
-                return;
-            }
-
-            wrapper.classList.remove("hidden");
-            listContainer.innerHTML = "";
-
-            for (let i = 0; i < activeModalQty; i++) {
-                const unitIndex = i;
-                const unitNumber = i + 1;
-                const currentUnitSauces = selectedSaucesByUnit[unitIndex] || [];
-
-                const saucesCheckboxesHtml = BRAND_CONFIG.availableSauces.map(sauce => {
-                    const isChecked = currentUnitSauces.includes(sauce);
-                    return `
-                        <label class="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-stone-200 cursor-pointer select-none hover:border-stone-400 text-xs shadow-sm">
-                            <input type="checkbox" 
-                                   ${isChecked ? 'checked' : ''} 
-                                   onchange="toggleUnitSauce(${unitIndex}, '${sauce}', this.checked)"
-                                   class="w-4 h-4 rounded border-stone-300 text-djavys-red focus:ring-djavys-red">
-                            <span class="text-stone-800 font-semibold">${sauce}</span>
-                        </label>
-                    `;
-                }).join("");
-
-                const unitCard = document.createElement("div");
-                unitCard.className = "bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-2.5";
-                unitCard.innerHTML = `
-                    <div class="flex items-center justify-between text-xs font-bold text-stone-900 border-b border-stone-200 pb-2 font-heading">
-                        <span><i class="fa-solid fa-burger text-djavys-red mr-1.5"></i> ${activeModalProduct.name} #${unitNumber}</span>
-                        <span class="text-[10px] text-djavys-gold font-bold">Porción #${unitNumber}</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        ${saucesCheckboxesHtml}
-                    </div>
-                `;
-
-                listContainer.appendChild(unitCard);
-            }
-        }
-
-        function updateCartUI() {
-            const badge = document.getElementById("cart-badge");
-            const mobileBadge = document.getElementById("mobile-cart-badge");
-            const itemsContainer = document.getElementById("cart-items-container");
-            const emptyView = document.getElementById("empty-cart-view");
-
-            const totalQty = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-            if (badge) badge.textContent = totalQty;
-            if (mobileBadge) mobileBadge.textContent = totalQty;
-
-            if (cartItems.length === 0) {
-                if (itemsContainer) itemsContainer.innerHTML = "";
-                if (emptyView) emptyView.classList.remove("hidden");
-            } else {
-                if (emptyView) emptyView.classList.add("hidden");
-
-                if (itemsContainer) {
-                    itemsContainer.innerHTML = cartItems.map(item => {
-                        const product = PRODUCT_CATALOG.find(p => p.id === item.productId);
-                        if (!product) return "";
-
-                        const totalItemPrice = item.unitPrice * item.quantity;
-
-                        let saucesBreakdown = "";
-                        if (product.allowsSauces && item.saucesByUnit && item.saucesByUnit.length > 0) {
-                            saucesBreakdown = item.saucesByUnit.map((sauceArr, idx) => {
-                                const sauceListStr = sauceArr.length > 0 ? sauceArr.join(", ") : "Sin cremas";
-                                return `<div class="text-[10px] text-stone-500 font-medium">#${idx+1}: <span class="text-stone-800 font-bold">${sauceListStr}</span></div>`;
-                            }).join("");
-                        }
-
-                        return `
-                            <div class="bg-white p-3.5 rounded-2xl border border-stone-200 flex gap-3.5 items-center shadow-sm">
-                                <img src="${product.image}" onerror="this.onerror=null; this.src='https://placehold.co/100x100/FFF8F0/D92323?text=D%27JAVYS'" alt="${product.name}" class="w-16 h-16 rounded-xl object-cover shrink-0 border border-stone-200">
-                                
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="font-extrabold text-xs text-stone-900 truncate font-heading">${product.name}</h4>
-                                    <p class="text-xs font-black text-djavys-gold font-heading mt-0.5">S/ ${totalItemPrice.toFixed(2)}</p>
-                                    
-                                    ${saucesBreakdown ? `<div class="mt-1 space-y-0.5 border-t border-stone-100 pt-1">${saucesBreakdown}</div>` : ''}
-                                    ${item.notes ? `<p class="text-[10px] text-djavys-red font-semibold italic mt-0.5">Nota: ${item.notes}</p>` : ''}
+                                <div class="grid grid-cols-2 gap-2 mt-2">
+                                    <div class="flex flex-col bg-dj-sand p-2.5 rounded-xl border border-dj-teal/10">
+                                        <span class="text-[9px] text-gray-400 font-extrabold uppercase">Distancia a la sede</span>
+                                        <span class="text-xs font-black text-dj-charcoal" x-text="deliveryDistance ? `${deliveryDistance.toFixed(2)} km` : 'Calculando...'"></span>
+                                    </div>
+                                    <div class="flex flex-col bg-dj-sand p-2.5 rounded-xl border border-dj-teal/10" :class="isOutOfRange ? 'bg-rose-50 border-rose-200' : ''">
+                                        <span class="text-[9px] text-gray-400 font-extrabold uppercase">Costo de Delivery</span>
+                                        <span class="text-xs font-black" :class="isOutOfRange ? 'text-rose-600' : 'text-dj-ember'" x-text="isOutOfRange ? 'Fuera de Rango' : `S/ ${deliveryCost.toFixed(2)}`"></span>
+                                    </div>
                                 </div>
 
-                                <div class="flex items-center gap-2 bg-stone-100 px-2.5 py-1.5 rounded-xl border border-stone-200 shrink-0">
-                                    <button onclick="updateCartItemQuantity('${item.cartKey}', -1)" class="text-stone-600 hover:text-djavys-red font-bold px-1 text-sm">-</button>
-                                    <span class="font-black text-xs text-stone-900 w-4 text-center font-heading">${item.quantity}</span>
-                                    <button onclick="updateCartItemQuantity('${item.cartKey}', 1)" class="text-stone-600 hover:text-emerald-600 font-bold px-1 text-sm">+</button>
+                                <div x-show="isOutOfRange" class="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-3 text-xs font-semibold mt-2">
+                                    <p class="flex items-center gap-1.5 text-rose-800 font-extrabold uppercase tracking-wider text-[10px]"><i class="fa-solid fa-triangle-exclamation"></i> Fuera de límite de delivery</p>
+                                    <p class="text-rose-950/80">La ubicación supera el límite de cobertura de 9 km desde la sede elegida. Prueba con otra sede más cercana o cámbiate a "Recoger en Local".</p>
+                                </div>
+
+                                <div class="flex items-center justify-between text-[9px] sm:text-[10px] text-dj-charcoal/80 font-bold bg-dj-teal/5 p-2 rounded-lg mt-1">
+                                    <span>📍 Coordenadas marcadas:</span>
+                                    <span class="text-dj-teal font-mono" x-text="gpsCoords || 'Mueve el marcador en el mapa...'"></span>
                                 </div>
                             </div>
-                        `;
-                    }).join("");
-                }
-            }
 
-            calculateCartTotals();
-            updateCartActionsState();
-        }
+                            <!-- RECOJO EN LOCAL -->
+                            <div x-show="checkoutDeliveryType === 'local'" class="bg-dj-sand p-3.5 rounded-xl border border-dj-teal/10 space-y-2">
+                                <p class="text-[11px] font-extrabold text-dj-charcoal">Recojo en: <span x-text="getSelectedSede().name"></span></p>
+                                <p class="text-xs font-semibold text-dj-charcoal/80" x-text="getSelectedSede().address"></p>
+                                <a :href="`https://www.google.com/maps/search/?api=1&query=${getSelectedSede().lat},${getSelectedSede().lng}`" target="_blank" rel="noopener noreferrer"
+                                   class="inline-flex items-center gap-1.5 text-[11px] font-bold text-dj-teal hover:text-dj-tealDark">
+                                    <i class="fa-solid fa-diamond-turn-right"></i> Ver ruta en Google Maps
+                                </a>
+                            </div>
+                        </div>
 
-        window.onload = function () {
-            evaluateStoreStatus();
-            renderCategoryTabs();
-            renderCatalog();
-            updateCartUI();
-            loadUserDataFromStorage();
-            autoFindNearestBranch(currentGPSCoords.lat, currentGPSCoords.lng);
-            updatePickupBranchDetails();
+                        <div>
+                            <label class="block text-[11px] font-extrabold text-dj-charcoal mb-1">Notas especiales para la cocina (Opcional)</label>
+                            <input type="text" x-model="checkoutNotes" placeholder="Ej: Ceviche menos picante, sin cebolla, etc." class="w-full text-xs py-2.5 px-3 rounded-xl border border-dj-teal/20 focus:border-dj-teal outline-none bg-dj-sand font-semibold text-dj-charcoal">
+                        </div>
 
-            setInterval(evaluateStoreStatus, 30000);
-        };
-    </script>
+                        <!-- PAGO -->
+                        <div class="space-y-4 bg-dj-sand p-4 rounded-3xl border border-dj-teal/10 shadow-xs text-left">
+                            <h4 class="text-xs font-display font-semibold text-dj-teal uppercase tracking-wider">Método de Pago</h4>
+
+                            <div class="grid grid-cols-2 gap-3 bg-white p-1.5 rounded-full border border-dj-teal/10">
+                                <button type="button" @click="checkoutPaymentMethod = 'yape'" :class="checkoutPaymentMethod === 'yape' ? 'bg-[#742d8c] text-white' : 'bg-transparent text-dj-charcoal/70 hover:text-dj-charcoal'" class="py-2.5 px-4 rounded-full text-xs font-black transition-all duration-200 flex items-center justify-center gap-2">
+                                    <span x-show="checkoutPaymentMethod === 'yape'" class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span><span>📱 Yape/Plin</span>
+                                </button>
+                                <button type="button" @click="checkoutPaymentMethod = 'cash'" :class="checkoutPaymentMethod === 'cash' ? 'bg-[#15803d] text-white' : 'bg-transparent text-dj-charcoal/70 hover:text-dj-charcoal'" class="py-2.5 px-4 rounded-full text-xs font-black transition-all duration-200 flex items-center justify-center gap-2">
+                                    <span x-show="checkoutPaymentMethod === 'cash'" class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span><span>💵 Efectivo</span>
+                                </button>
+                            </div>
+
+                            <div x-show="checkoutPaymentMethod === 'yape'" class="bg-[#742d8c] text-white p-4 rounded-2xl border border-[#5a1b70] space-y-3 shadow-md"
+                                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="bg-cyan-400 text-[#742d8c] font-black text-[9px] px-2 py-1 rounded-md shadow-xs">YAPE/PLIN</div>
+                                        <div class="text-left">
+                                            <p class="font-extrabold text-sm sm:text-base tracking-wider" x-text="yapeNumber"></p>
+                                            <p class="text-[9px] sm:text-[10px] text-white/95 font-bold leading-none mt-1" x-text="yapeOwner"></p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="copyToClipboard(yapeNumber)" class="px-3.5 py-2 bg-cyan-400 hover:bg-cyan-300 text-[#742d8c] font-black text-[10px] rounded-xl transition shadow-xs active:scale-95">Copiar</button>
+                                </div>
+                            </div>
+
+                            <div x-show="checkoutPaymentMethod === 'cash'" class="bg-white p-4 rounded-2xl border border-dj-teal/10 space-y-3 shadow-xs"
+                                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                                <div class="space-y-2 text-left">
+                                    <label class="block text-[11px] font-extrabold text-dj-charcoal">¿Con cuánto vas a pagar? *</label>
+                                    <div class="relative rounded-xl shadow-xs">
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span class="text-xs font-black text-dj-ember">S/</span></div>
+                                        <input type="number" step="0.10" x-model="cashAmountToPay" :placeholder="`Ej: S/ ${(getCartTotalWithDelivery() + 10).toFixed(2)}`" class="w-full text-xs py-2.5 pl-8 pr-3 rounded-xl border border-dj-teal/20 focus:border-[#15803d] focus:ring-1 focus:ring-[#15803d] outline-none bg-dj-sand font-bold text-dj-charcoal">
+                                    </div>
+                                    <div class="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-left" x-show="Number(cashAmountToPay) > 0">
+                                        <template x-if="Number(cashAmountToPay) >= getCartTotalWithDelivery()">
+                                            <p class="text-emerald-800 font-semibold flex justify-between items-center"><span>💵 Tu vuelto será de:</span><span class="font-black text-sm" x-text="`S/ ${(Number(cashAmountToPay) - getCartTotalWithDelivery()).toFixed(2)}`"></span></p>
+                                        </template>
+                                        <template x-if="Number(cashAmountToPay) < getCartTotalWithDelivery()">
+                                            <p class="text-rose-600 font-extrabold">⚠️ El monto debe ser igual o mayor al total (S/ <span x-text="getCartTotalWithDelivery().toFixed(2)"></span>).</p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p x-show="checkoutPaymentMethod === 'yape'" class="text-[10px] text-dj-charcoal/80 font-bold text-center leading-normal mt-1">Copia el número, paga el total desde tu Yape o Plin, y envía el comprobante por WhatsApp al finalizar.</p>
+                            <p x-show="checkoutPaymentMethod === 'cash'" class="text-[10px] text-dj-charcoal/80 font-bold text-center leading-normal mt-1">Ten el dinero listo al recibir tu pedido con el motorizado para agilizar la entrega.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div x-show="cart.length > 0" class="p-3.5 sm:p-5 border-t border-dj-sand bg-white space-y-2 sm:space-y-4 flex-shrink-0 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+                    <div class="space-y-1 sm:space-y-1.5 text-xs font-bold text-dj-charcoal/90" :class="currentStep === 'checkout' ? 'hidden sm:block' : ''">
+                        <div class="flex justify-between"><span>Subtotal:</span><span x-text="`S/ ${getCartTotal().toFixed(2)}`"></span></div>
+                        <div class="flex justify-between text-amber-700" x-show="checkoutDeliveryType === 'delivery'"><span>Delivery:</span><span x-text="isOutOfRange ? 'Fuera de rango' : `S/ ${deliveryCost.toFixed(2)}`"></span></div>
+                    </div>
+
+                    <div>
+                        <div x-show="currentStep === 'cart'" class="space-y-3">
+                            <div class="flex justify-between text-sm sm:text-base font-black text-dj-ember pt-1 border-t border-dj-sand/60"><span>Total a pagar:</span><span x-text="`S/ ${getCartTotal().toFixed(2)}`"></span></div>
+                            <button :disabled="!isOpen" @click="goToCheckout()" :class="!isOpen ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-dj-teal hover:bg-dj-tealDark'" class="w-full py-3 sm:py-4 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wide">
+                                <span x-text="isOpen ? 'Proceder al pago' : 'Cocina Cerrada actualmente'"></span>
+                                <i x-show="isOpen" class="fa-solid fa-arrow-right text-[10px] sm:text-xs"></i>
+                            </button>
+                        </div>
+
+                        <div x-show="currentStep === 'checkout'" class="flex sm:flex-col justify-between items-center gap-3 pt-1 border-t border-dj-sand/60 sm:border-t-0">
+                            <div class="flex flex-col text-left mr-auto sm:w-full sm:pb-2 sm:border-b sm:border-dj-sand/60">
+                                <span class="text-[8px] sm:text-[9px] text-gray-500 font-extrabold uppercase tracking-wider leading-none">Total a Pagar</span>
+                                <span class="text-base sm:text-lg font-black text-dj-ember leading-tight" x-text="`S/ ${getCartTotalWithDelivery().toFixed(2)}`"></span>
+                                <span class="text-[8px] text-amber-600 font-bold block" x-show="checkoutDeliveryType === 'delivery' && !isOutOfRange">incluye envío</span>
+                                <span class="text-[8px] text-rose-600 font-bold block" x-show="checkoutDeliveryType === 'delivery' && isOutOfRange">Fuera de cobertura</span>
+                            </div>
+
+                            <button @click="sendToWhatsApp()" :disabled="(checkoutDeliveryType === 'delivery' && isOutOfRange) || !isOpen"
+                                    :class="((checkoutDeliveryType === 'delivery' && isOutOfRange) || !isOpen) ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-[#25D366] hover:bg-[#128C7E]'"
+                                    class="flex-1 sm:w-full py-2.5 sm:py-3.5 px-3 sm:px-4 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 text-xs sm:text-sm uppercase tracking-wide">
+                                <i class="fa-brands fa-whatsapp text-base sm:text-lg"></i>
+                                <span class="inline sm:hidden" x-text="!isOpen ? 'Cerrado' : (isOutOfRange && checkoutDeliveryType === 'delivery' ? 'Bloqueado' : 'Confirmar')"></span>
+                                <span class="hidden sm:inline" x-text="!isOpen ? 'Cocina Cerrada' : (isOutOfRange && checkoutDeliveryType === 'delivery' ? 'Ubicación fuera de rango' : 'Confirmar Pedido por WhatsApp')"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICACIONES -->
+    <div x-show="floatingNotification" class="fixed bottom-4 left-4 right-4 md:left-auto md:w-80 bg-dj-charcoal text-white p-4 rounded-xl shadow-2xl z-50 flex items-center justify-between border border-dj-ember/20" style="display: none;"
+         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-4">
+        <span class="text-xs font-bold" x-text="floatingNotification"></span>
+        <button @click="floatingNotification = ''" class="text-dj-ember font-black text-xs px-2">OK</button>
+    </div>
+
+    <!-- BOTÓN FLOTANTE -->
+    <button @click="isCartOpen = true" x-show="!isCartOpen"
+            class="fixed bottom-4 right-4 z-40 bg-dj-teal hover:bg-dj-tealDark text-white font-bold py-2.5 px-4 rounded-full shadow-xl transition-all duration-300 transform hover:scale-103 flex items-center gap-2 border border-dj-ember text-xs sm:text-sm"
+            style="display: none;"
+            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-10 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+        <span class="relative">
+            <i class="fa-solid fa-bowl-food text-sm sm:text-base text-dj-ember"></i>
+            <span x-show="getCartItemsCount() > 0" class="absolute -top-2.5 -right-2.5 bg-dj-ember text-white font-black text-[8px] h-4 w-4 rounded-full flex items-center justify-center border border-dj-teal animate-pulse" x-text="getCartItemsCount()"></span>
+        </span>
+        <span class="tracking-wide uppercase text-[10px] sm:text-xs">Ver Pedido</span>
+    </button>
+
 </body>
 </html>
